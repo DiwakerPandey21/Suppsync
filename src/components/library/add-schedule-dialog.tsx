@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Clock, Loader2, RefreshCw } from 'lucide-react'
+import { Clock, Loader2, RefreshCw, Sun, Moon } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface AddScheduleDialogProps {
@@ -28,6 +28,10 @@ export function AddScheduleDialog({ supplementId, supplementName, supplementForm
     const [timeOfDay, setTimeOfDay] = useState('morning')
     const [cycleOnDays, setCycleOnDays] = useState('5')
     const [cycleOffDays, setCycleOffDays] = useState('2')
+    
+    // Chronobiology State (V10)
+    const [triggerType, setTriggerType] = useState('fixed') // 'fixed', 'sunrise', 'sunset', 'solar_noon'
+    const [offsetMins, setOffsetMins] = useState('0')
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -49,7 +53,9 @@ export function AddScheduleDialog({ supplementId, supplementName, supplementForm
                         dosage_amount: parseFloat(dosageAmount),
                         dosage_unit: dosageUnit,
                         frequency,
-                        time_of_day: timeOfDay,
+                        time_of_day: timeOfDay, // legacy, keeping for backward compat
+                        trigger_type: triggerType,
+                        offset_mins: parseInt(offsetMins || '0'),
                         is_active: true,
                         ...(frequency === 'cycle' ? {
                             cycle_on_days: parseInt(cycleOnDays),
@@ -163,21 +169,63 @@ export function AddScheduleDialog({ supplementId, supplementName, supplementForm
                     )}
 
                     <div className="space-y-2">
-                        <Label>Time of Day</Label>
-                        <Select value={timeOfDay} onValueChange={setTimeOfDay}>
+                        <Label>Timing Trigger (V10 Chronobiology)</Label>
+                        <Select value={triggerType} onValueChange={setTriggerType}>
                             <SelectTrigger className="bg-slate-900 border-slate-800">
-                                <SelectValue placeholder="Select time" />
+                                <SelectValue placeholder="Select trigger" />
                             </SelectTrigger>
                             <SelectContent className="bg-slate-900 border-slate-800 text-white">
-                                <SelectItem value="morning">Morning</SelectItem>
-                                <SelectItem value="pre-workout">Pre-Workout</SelectItem>
-                                <SelectItem value="intra-workout">Intra-Workout</SelectItem>
-                                <SelectItem value="post-workout">Post-Workout</SelectItem>
-                                <SelectItem value="evening">Evening / Bedtime</SelectItem>
-                                <SelectItem value="anytime">Anytime</SelectItem>
+                                <SelectItem value="fixed">Fixed Time (Legacy)</SelectItem>
+                                <SelectItem value="sunrise">At Sunrise</SelectItem>
+                                <SelectItem value="sunset">At Sunset</SelectItem>
+                                <SelectItem value="solar_noon">At Solar Noon</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
+
+                    {triggerType !== 'fixed' && (
+                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 space-y-3">
+                            <div className="flex items-center space-x-2 mb-1">
+                                <Sun className="w-4 h-4 text-amber-500" />
+                                <Label className="text-xs font-bold text-amber-500 uppercase tracking-wider">Circadian Offset</Label>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="offset" className="text-xs text-slate-400">Offset (Minutes)</Label>
+                                <div className="flex space-x-2 items-center">
+                                    <Input
+                                        id="offset"
+                                        type="number"
+                                        className="bg-slate-900 border-slate-700 h-10 w-24"
+                                        value={offsetMins}
+                                        onChange={(e) => setOffsetMins(e.target.value)}
+                                        placeholder="e.g. 30"
+                                    />
+                                    <span className="text-xs text-slate-500">
+                                        {parseInt(offsetMins || '0') > 0 ? 'mins after' : parseInt(offsetMins || '0') < 0 ? 'mins before' : 'exactly at'} {triggerType.replace('_', ' ')}.
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {triggerType === 'fixed' && (
+                        <div className="space-y-2">
+                            <Label>Time of Day</Label>
+                            <Select value={timeOfDay} onValueChange={setTimeOfDay}>
+                                <SelectTrigger className="bg-slate-900 border-slate-800">
+                                    <SelectValue placeholder="Select time" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-900 border-slate-800 text-white">
+                                    <SelectItem value="morning">Morning</SelectItem>
+                                    <SelectItem value="pre-workout">Pre-Workout</SelectItem>
+                                    <SelectItem value="intra-workout">Intra-Workout</SelectItem>
+                                    <SelectItem value="post-workout">Post-Workout</SelectItem>
+                                    <SelectItem value="evening">Evening / Bedtime</SelectItem>
+                                    <SelectItem value="anytime">Anytime</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
 
                     <Button type="submit" className="w-full bg-[#3b82f6] hover:bg-blue-600 mt-6" disabled={isLoading}>
                         {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Schedule'}

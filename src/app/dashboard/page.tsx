@@ -21,10 +21,36 @@ import { ExpiryAlerts } from '@/components/dashboard/expiry-alerts'
 import { SupplementTimeline } from '@/components/dashboard/supplement-timeline'
 import { MoodLogger } from '@/components/dashboard/mood-logger'
 import { SmartRecs } from '@/components/dashboard/smart-recs'
-import { Flame, BarChart3, MessageCircle, Target } from 'lucide-react'
+import { HandfulScanner } from '@/components/dashboard/handful-scanner'
+import { Flame, BarChart3, MessageCircle, Target, Sun, Moon, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 
 import { useEffect, useState, useRef } from 'react'
+
+// Basic chronobiology calculations (approximate based on rough lat/long or defaulting to 6am/6pm if unavailable)
+// A robust V10 would use a geolocation API, but for this demo we'll simulate standard solar events.
+const getSolarTimes = () => {
+    const now = new Date();
+    
+    // Simulate Sunrise at 6:30 AM
+    const sunrise = new Date(now);
+    sunrise.setHours(6, 30, 0, 0);
+    
+    // Simulate Solar Noon at 12:15 PM
+    const solarNoon = new Date(now);
+    solarNoon.setHours(12, 15, 0, 0);
+
+    // Simulate Sunset at 7:45 PM
+    const sunset = new Date(now);
+    sunset.setHours(19, 45, 0, 0);
+
+    return { sunrise, solarNoon, sunset };
+};
+
+const formatSolarTime = (baseTime: Date, offsetMins: number) => {
+    const targetTime = new Date(baseTime.getTime() + offsetMins * 60000);
+    return targetTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
 
 export default function DashboardPage() {
     const supabase = createClient()
@@ -48,10 +74,10 @@ export default function DashboardPage() {
             if (!user) return
             setUserId(user.id)
 
-            // 1. Fetch active schedules joined with supplements (including cycle fields)
+            // 1. Fetch active schedules joined with supplements (including cycle and solar fields)
             const { data: schedules } = await supabase
                 .from('schedules')
-                .select('id, dosage_amount, dosage_unit, cycle_on_days, cycle_off_days, cycle_start_date, supplements(id, name, color_hex)')
+                .select('id, dosage_amount, dosage_unit, time_of_day, trigger_type, offset_mins, cycle_on_days, cycle_off_days, cycle_start_date, supplements(id, name, color_hex)')
                 .eq('user_id', user.id)
                 .eq('is_active', true)
 
@@ -78,6 +104,25 @@ export default function DashboardPage() {
                         isWashout = dayInCycle >= sched.cycle_on_days
                     }
 
+                    // Chronobiology Timing (V10)
+                    const solarTimes = getSolarTimes();
+                    let timingDisplay = sched.time_of_day || 'Anytime'
+                    let isSolar = false
+
+                    if (sched.trigger_type && sched.trigger_type !== 'fixed') {
+                        isSolar = true;
+                        let baseTime: Date;
+                        switch(sched.trigger_type) {
+                            case 'sunrise': baseTime = solarTimes.sunrise; break;
+                            case 'sunset': baseTime = solarTimes.sunset; break;
+                            case 'solar_noon': baseTime = solarTimes.solarNoon; break;
+                            default: baseTime = solarTimes.sunrise;
+                        }
+                        const exactTime = formatSolarTime(baseTime, sched.offset_mins || 0);
+                        const offsetText = sched.offset_mins > 0 ? `+${sched.offset_mins}m` : sched.offset_mins < 0 ? `${sched.offset_mins}m` : '';
+                        timingDisplay = `${sched.trigger_type} ${offsetText} (${exactTime})`
+                    }
+
                     return {
                         id: sched.id,
                         supplement_id: supplement?.id,
@@ -87,7 +132,9 @@ export default function DashboardPage() {
                         taken: logForSchedule?.status === 'taken',
                         color: supplement?.color_hex || '#3b82f6',
                         log_id: logForSchedule?.id,
-                        isWashout
+                        isWashout,
+                        timingDisplay,
+                        isSolar
                     }
                 })
                 setTodayLogs(mappedLogs)
@@ -332,6 +379,26 @@ export default function DashboardPage() {
             {/* Daily Challenge */}
             <DailyChallenge />
 
+            {/* Zen Mode Button */}
+            <div className="w-full px-4 mb-6">
+                <Link href="/routine" className="block w-full">
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-2xl p-4 flex items-center justify-between shadow-[0_0_20px_rgba(59,130,246,0.3)] transition-all">
+                        <div className="flex items-center space-x-3">
+                            <div className="bg-white/20 p-2 rounded-xl">
+                                <span className="text-xl">🧘‍♂️</span>
+                            </div>
+                            <div className="text-left">
+                                <h3 className="font-bold text-white text-sm">Zen Mode</h3>
+                                <p className="text-[10px] text-blue-100">Distraction-free routine player</p>
+                            </div>
+                        </div>
+                        <div className="bg-white/10 rounded-full px-4 py-2 text-xs font-bold text-white">
+                            Start →
+                        </div>
+                    </div>
+                </Link>
+            </div>
+
             {/* Main Progress Ring */}
             <ProgressRing completed={completed} total={total} />
 
@@ -371,6 +438,11 @@ export default function DashboardPage() {
 
             {/* Streak Freeze */}
             {!isLoading && userId && <StreakFreeze currentStreak={streak} userId={userId} />}
+
+            {/* V10: Vision AI Handful Scanner */}
+            <div className="w-full px-4 mb-3">
+                <HandfulScanner onLogsCompleted={refreshLogs} />
+            </div>
 
             {/* The Checklist */}
             <DailyChecklist logs={todayLogs} setLogs={setTodayLogs} dateStr={todayStr} />

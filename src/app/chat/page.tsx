@@ -15,27 +15,34 @@ export default function ChatPage() {
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState('')
     const [isLoading, setIsLoading] = useState(false)
-    const [userStack, setUserStack] = useState<string[]>([])
+    const [userContext, setUserContext] = useState<any>({ stack: [], scores: [], biomarkers: [], goals: [], genotypes: [] })
     const scrollRef = useRef<HTMLDivElement>(null)
 
-    useEffect(() => {
-        loadUserStack()
-    }, [])
+    useEffect(() => { loadUserContext() }, [])
 
     useEffect(() => {
         scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
     }, [messages])
 
-    const loadUserStack = async () => {
+    const loadUserContext = async () => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
-        const { data: supps } = await supabase
-            .from('supplements')
-            .select('name, default_dosage_amount, default_dosage_unit')
-            .eq('user_id', user.id)
-        if (supps) {
-            setUserStack(supps.map(s => `${s.name} (${s.default_dosage_amount}${s.default_dosage_unit})`))
-        }
+
+        const [supps, scores, bio, goals, genos] = await Promise.all([
+            supabase.from('supplements').select('name, default_dosage_amount, default_dosage_unit').eq('user_id', user.id),
+            supabase.from('subjective_scores').select('record_date, energy_score, focus_score, sleep_score').eq('user_id', user.id).order('record_date', { ascending: false }).limit(7),
+            supabase.from('biomarkers').select('name, value, unit, log_date').eq('user_id', user.id).order('log_date', { ascending: false }).limit(5),
+            supabase.from('goals').select('title, current_value, target_value').eq('user_id', user.id),
+            supabase.from('genotypes').select('marker_name, status').eq('user_id', user.id)
+        ])
+
+        setUserContext({
+            stack: supps.data?.map(s => `${s.name} (${s.default_dosage_amount}${s.default_dosage_unit})`) || [],
+            scores: scores.data || [],
+            biomarkers: bio.data || [],
+            goals: goals.data || [],
+            genotypes: genos.data || []
+        })
     }
 
     const sendMessage = async () => {
@@ -46,33 +53,59 @@ export default function ChatPage() {
         setInput('')
         setIsLoading(true)
 
-        const systemContext = userStack.length > 0
-            ? `The user currently takes these supplements: ${userStack.join(', ')}. Use this context to give personalized advice.`
-            : 'The user has not added any supplements yet.'
-
-        const conversationHistory = [...messages, userMsg]
-            .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
-            .join('\n')
-
-        const prompt = `You are SuppSync AI, a friendly and knowledgeable supplement coach. You help users with supplement advice, dosages, timing, interactions, and general wellness questions.
-
-${systemContext}
-
-Conversation so far:
-${conversationHistory}
-
-Respond helpfully and concisely. Use bullet points when listing multiple items. Keep responses under 150 words.`
+        // Create the payload for the V9 chat route
+        const payload = {
+            messages: [...messages, userMsg],
+            context: {
+                supplements: userContext.stack.map((s: string) => ({ name: s })),
+                recentScores: userContext.scores,
+                biomarkers: userContext.biomarkers,
+                goals: userContext.goals,
+                genotypes: userContext.genotypes
+            }
+        }
 
         try {
-            const res = await fetch('/api/gemini', {
+            const res = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt })
+                body: JSON.stringify(payload)
             })
 
             if (res.ok) {
-                const data = await res.json()
-                setMessages(prev => [...prev, { role: 'assistant', content: data.response }])
+                // Read streaming response
+                const reader = res.body?.getReader()
+                const decoder = new TextDecoder()
+                let responseText = ''
+
+                if (reader) {
+                    setMessages(prev => [...prev, { role: 'assistant', content: '' }])
+                    
+                    while (true) {
+                        const { done, value } = await reader.read()
+                        if (done) break
+                        
+                        // the streamText function sends tokens with a prefix (e.g. 0:"Hello"), we need to extract the text
+                        const chunk = decoder.decode(value)
+                        const lines = chunk.split('\n').filter(Boolean)
+                        
+                        for (const line of lines) {
+                            if (line.startsWith('0:')) {
+                                try {
+                                    const text = JSON.parse(line.slice(2))
+                                    responseText += text
+                                    setMessages(prev => {
+                                        const newMsgs = [...prev]
+                                        newMsgs[newMsgs.length - 1].content = responseText
+                                        return newMsgs
+                                    })
+                                } catch (e) {
+                                    console.error("Error parsing streaming chunk", e)
+                                }
+                            }
+                        }
+                    }
+                }
             } else {
                 setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I had trouble thinking. Try again!' }])
             }

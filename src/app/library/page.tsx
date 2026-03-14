@@ -2,6 +2,7 @@ import { SupplementList } from '@/components/library/supplement-list'
 import { InteractionChecker } from '@/components/library/interaction-checker'
 import { CompareSupplements } from '@/components/library/compare-supplements'
 import { InteractionMatrix } from '@/components/library/interaction-matrix'
+import { StackVersionsManager } from '@/components/library/stack-versions'
 import Link from 'next/link'
 
 export default function LibraryPage() {
@@ -10,6 +11,11 @@ export default function LibraryPage() {
             <div className="w-full px-4 mb-6">
                 <h1 className="text-3xl font-black text-white tracking-tight">Library</h1>
                 <p className="text-slate-400 text-sm mt-1">Manage all your currently tracked supplements.</p>
+            </div>
+
+            {/* V10 Stack Versions Manager */}
+            <div className="w-full px-4 mb-6">
+                <StackVersionsManager />
             </div>
 
             {/* Interaction Checker */}

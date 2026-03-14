@@ -14,6 +14,8 @@ export type Log = {
     color: string
     log_id?: string
     isWashout?: boolean
+    timingDisplay?: string
+    isSolar?: boolean
 }
 
 interface DailyChecklistProps {
@@ -115,7 +117,14 @@ export function DailyChecklist({ logs, setLogs, dateStr }: DailyChecklistProps) 
                                     {log.name}
                                 </p>
                                 <div className="flex items-center space-x-2">
-                                    <p className="text-xs text-slate-500">{log.amount}</p>
+                                    <p className="text-[11px] text-slate-500 font-medium">
+                                        {log.amount} • {log.timingDisplay || 'Morning'}
+                                    </p>
+                                    {log.isSolar && (
+                                        <div className="flex items-center space-x-1 px-1.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-[9px] font-bold text-amber-500">
+                                            <span>SOLAR SYNC</span>
+                                        </div>
+                                    )}
                                     {log.isWashout && (
                                         <span className="text-[9px] uppercase font-black tracking-wider bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded">
                                             Washout

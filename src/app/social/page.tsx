@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Leaderboard } from '@/components/social/leaderboard'
 import { CommunityChallenges } from '@/components/social/community-challenges'
+import { SquadsTab } from '@/components/social/squads-tab'
+import { InteractiveFeedItem } from '@/components/social/interactive-feed'
 
 type Activity = {
     id: string
@@ -27,7 +29,7 @@ type SearchResult = {
 
 export default function SocialPage() {
     const supabase = createClient()
-    const [tab, setTab] = useState<'feed' | 'search' | 'leaderboard' | 'challenges'>('feed')
+    const [tab, setTab] = useState<'feed' | 'search' | 'leaderboard' | 'challenges' | 'squads'>('feed')
     const [activities, setActivities] = useState<Activity[]>([])
     const [searchQuery, setSearchQuery] = useState('')
     const [searchResults, setSearchResults] = useState<SearchResult[]>([])
@@ -168,15 +170,15 @@ export default function SocialPage() {
 
             {/* Tab Switcher */}
             <div className="flex bg-slate-900 rounded-xl p-1 mb-6">
-                {(['feed', 'search', 'leaderboard', 'challenges'] as const).map(t => (
+                {(['feed', 'search', 'squads', 'leaderboard', 'challenges'] as const).map(t => (
                     <button
                         key={t}
                         onClick={() => setTab(t)}
-                        className={`flex-1 py-2 rounded-lg text-[11px] font-semibold transition-all ${
+                        className={`flex-1 py-2 rounded-lg text-[10px] font-semibold transition-all ${
                             tab === t ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
                         }`}
                     >
-                        {t === 'feed' ? 'Feed' : t === 'search' ? 'Find' : t === 'leaderboard' ? '🏆' : '🎯'}
+                        {t === 'feed' ? 'Feed' : t === 'search' ? 'Find' : t === 'squads' ? 'Squads' : t === 'leaderboard' ? '🏆' : '🎯'}
                     </button>
                 ))}
             </div>
@@ -201,26 +203,8 @@ export default function SocialPage() {
                             </Button>
                         </div>
                     ) : (
-                        activities.map((act, i) => (
-                            <motion.div
-                                key={act.id}
-                                className="flex items-start space-x-3 p-4 bg-slate-900/50 border border-slate-800 rounded-2xl"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.05 }}
-                            >
-                                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-sm font-bold text-white flex-shrink-0">
-                                    {act.display_name?.charAt(0).toUpperCase()}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm text-white">
-                                        <span className="font-bold">{act.display_name}</span>{' '}
-                                        <span className="text-slate-400">{getActivityText(act)}</span>
-                                    </p>
-                                    <p className="text-[10px] text-slate-600 mt-1">{timeAgo(act.created_at)}</p>
-                                </div>
-                                <div className="mt-1">{getActivityIcon(act.type)}</div>
-                            </motion.div>
+                        activities.map((act) => (
+                            <InteractiveFeedItem key={act.id} activity={act as any} currentUserId={userId!} />
                         ))
                     )}
                 </div>
@@ -277,8 +261,10 @@ export default function SocialPage() {
                 </div>
             )}
 
-            {/* Leaderboard Tab */}
             {tab === 'leaderboard' && <Leaderboard />}
+
+            {/* Squads Tab */}
+            {tab === 'squads' && <SquadsTab />}
 
             {/* Challenges Tab */}
             {tab === 'challenges' && <CommunityChallenges />}

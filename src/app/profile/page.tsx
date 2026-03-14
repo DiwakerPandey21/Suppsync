@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { ShareableProfileCard } from '@/components/profile/shareable-card'
 import { ProgressPhotos } from '@/components/profile/progress-photos'
+import { MonthInReview } from '@/components/profile/month-in-review'
 
 type Badge = {
     id: string
@@ -40,6 +41,7 @@ export default function ProfilePage() {
         protocolsAdopted: 0,
         daysActive: 0,
     })
+    const [userId, setUserId] = useState<string | null>(null)
     const [userName, setUserName] = useState('')
     const [isLoading, setIsLoading] = useState(true)
 
@@ -48,6 +50,7 @@ export default function ProfilePage() {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) return
 
+            setUserId(user.id)
             setUserName(user.email?.split('@')[0] || 'User')
 
             const { count: logsCount } = await supabase
@@ -130,6 +133,9 @@ export default function ProfilePage() {
                 <h1 className="text-2xl font-black text-white">{userName}</h1>
                 <p className="text-sm text-slate-500 mt-1">Biohacker since Day 1</p>
             </div>
+
+            {/* Month in Review (V9) */}
+            {userId && <MonthInReview userId={userId} />}
 
             {/* Lifetime Stats Grid */}
             <div className="grid grid-cols-3 gap-3 mb-8">
