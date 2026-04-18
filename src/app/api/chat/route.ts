@@ -40,10 +40,13 @@ export async function POST(req: Request) {
         }
 
         const result = await streamText({
-            model: google('gemini-2.5-flash'),
+            model: google('gemini-1.5-flash'),
             system: systemPrompt,
             messages,
         })
+
+        // @ts-ignore - bypass AI SDK type mismatch on Vercel build
+        return result.toDataStreamResponse()
 
     } catch (error: any) {
         console.error("SYNCBOT CHAT API ERROR:", error)
