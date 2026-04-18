@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Clock, Loader2, RefreshCw, Sun, Moon } from 'lucide-react'
+import { Clock, Loader2, RefreshCw, Sun, Moon, Bell } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface AddScheduleDialogProps {
@@ -33,6 +33,9 @@ export function AddScheduleDialog({ supplementId, supplementName, supplementForm
     const [triggerType, setTriggerType] = useState('fixed') // 'fixed', 'sunrise', 'sunset', 'solar_noon'
     const [offsetMins, setOffsetMins] = useState('0')
 
+    // Reminder Alarm State
+    const [reminderTime, setReminderTime] = useState('') // HH:MM format
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsLoading(true)
@@ -44,35 +47,51 @@ export function AddScheduleDialog({ supplementId, supplementName, supplementForm
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) throw new Error('Not authenticated')
 
+            const scheduleData: any = {
+                user_id: user.id,
+                supplement_id: supplementId,
+                dosage_amount: parseFloat(dosageAmount),
+                dosage_unit: dosageUnit,
+                frequency,
+                time_of_day: timeOfDay,
+                trigger_type: triggerType,
+                offset_mins: parseInt(offsetMins || '0'),
+                is_active: true,
+                ...(frequency === 'cycle' ? {
+                    cycle_on_days: parseInt(cycleOnDays),
+                    cycle_off_days: parseInt(cycleOffDays),
+                    cycle_start_date: new Date().toLocaleDateString('en-CA')
+                } : {})
+            }
+
+            // Only add reminder_time if user set one (column may not exist yet)
+            if (reminderTime) {
+                scheduleData.reminder_time = reminderTime
+            }
+
             const { error } = await supabase
                 .from('schedules')
-                .insert([
-                    {
-                        user_id: user.id,
-                        supplement_id: supplementId,
-                        dosage_amount: parseFloat(dosageAmount),
-                        dosage_unit: dosageUnit,
-                        frequency,
-                        time_of_day: timeOfDay, // legacy, keeping for backward compat
-                        trigger_type: triggerType,
-                        offset_mins: parseInt(offsetMins || '0'),
-                        is_active: true,
-                        ...(frequency === 'cycle' ? {
-                            cycle_on_days: parseInt(cycleOnDays),
-                            cycle_off_days: parseInt(cycleOffDays),
-                            cycle_start_date: new Date().toLocaleDateString('en-CA')
-                        } : {})
-                    }
-                ])
+                .insert([scheduleData])
 
-            if (error) throw error
+            if (error) {
+                // If reminder_time column doesn't exist, retry without it
+                if (error.message?.includes('reminder_time')) {
+                    delete scheduleData.reminder_time
+                    const { error: retryError } = await supabase
+                        .from('schedules')
+                        .insert([scheduleData])
+                    if (retryError) throw new Error(retryError.message || JSON.stringify(retryError))
+                } else {
+                    throw new Error(error.message || JSON.stringify(error))
+                }
+            }
 
             setOpen(false)
             router.refresh()
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error adding schedule:', error)
-            alert('Failed to add schedule')
+            alert('Failed to add schedule: ' + (error?.message || 'Unknown error'))
         } finally {
             setIsLoading(false)
         }
@@ -226,6 +245,24 @@ export function AddScheduleDialog({ supplementId, supplementName, supplementForm
                             </Select>
                         </div>
                     )}
+
+                    {/* ⏰ Reminder Alarm Time Picker */}
+                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 space-y-3">
+                        <div className="flex items-center space-x-2 mb-1">
+                            <Bell className="w-4 h-4 text-emerald-400" />
+                            <Label className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Reminder Alarm</Label>
+                        </div>
+                        <p className="text-[10px] text-slate-500">Set an exact time to receive a push notification reminding you to take this supplement.</p>
+                        <input
+                            type="time"
+                            value={reminderTime}
+                            onChange={(e) => setReminderTime(e.target.value)}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500/50 [color-scheme:dark]"
+                        />
+                        {reminderTime && (
+                            <p className="text-[10px] text-emerald-400 font-semibold">🔔 You will be reminded at {reminderTime} daily</p>
+                        )}
+                    </div>
 
                     <Button type="submit" className="w-full bg-[#3b82f6] hover:bg-blue-600 mt-6" disabled={isLoading}>
                         {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Schedule'}

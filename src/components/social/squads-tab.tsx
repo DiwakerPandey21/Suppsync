@@ -57,6 +57,7 @@ export function SquadsTab() {
     const createSquad = async () => {
         if (!newSquadName.trim()) return
         setIsSaving(true)
+        setErrorMsg('')
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
 
@@ -69,7 +70,13 @@ export function SquadsTab() {
             created_by: user.id
         }).select().single()
 
-        if (!error && data) {
+        if (error) {
+            setErrorMsg(error.message)
+            setIsSaving(false)
+            return
+        }
+
+        if (data) {
             await supabase.from('squad_members').insert({
                 squad_id: data.id,
                 user_id: user.id
@@ -181,7 +188,7 @@ export function SquadsTab() {
     if (view === 'create') {
         return (
             <GlassCard gradient="blue">
-                <button onClick={() => setView('list')} className="text-xs text-slate-400 hover:text-white mb-4 block">← Back</button>
+                <button onClick={() => { setView('list'); setErrorMsg('') }} className="text-xs text-slate-400 hover:text-white mb-4 block">← Back</button>
                 <h3 className="text-lg font-bold text-white mb-4">Create a Squad</h3>
                 <input
                     value={newSquadName}
@@ -195,6 +202,7 @@ export function SquadsTab() {
                     placeholder="Description"
                     className="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white mb-4 focus:outline-none focus:border-blue-500/50"
                 />
+                {errorMsg && <p className="text-xs text-red-400 mb-3 text-center bg-red-900/20 p-2 rounded">{errorMsg}</p>}
                 <Button onClick={createSquad} disabled={isSaving || !newSquadName.trim()} className="w-full bg-blue-600 hover:bg-blue-700">
                     {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Squad'}
                 </Button>
@@ -227,7 +235,7 @@ export function SquadsTab() {
         <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3 mb-6">
                 <button 
-                    onClick={() => setView('create')}
+                    onClick={() => { setView('create'); setErrorMsg('') }}
                     className="flex flex-col items-center justify-center p-4 bg-gradient-to-br from-blue-500/10 to-transparent border border-blue-500/20 rounded-2xl hover:bg-blue-500/20 transition-colors"
                 >
                     <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center mb-2">

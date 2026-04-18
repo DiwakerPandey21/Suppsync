@@ -29,6 +29,7 @@ export function CommunityChallenges() {
     const [newDesc, setNewDesc] = useState('')
     const [newDays, setNewDays] = useState(7)
     const [creating, setCreating] = useState(false)
+    const [errorMsg, setErrorMsg] = useState('')
 
     useEffect(() => { load() }, [])
 
@@ -74,14 +75,15 @@ export function CommunityChallenges() {
     const create = async () => {
         if (!newTitle.trim()) return
         setCreating(true)
+        setErrorMsg('')
         const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return
+        if (!user) { setCreating(false); return }
 
         const start = new Date()
         const end = new Date()
         end.setDate(end.getDate() + newDays)
 
-        await supabase.from('challenges').insert({
+        const { error } = await supabase.from('challenges').insert({
             creator_id: user.id,
             title: newTitle,
             description: newDesc,
@@ -90,6 +92,12 @@ export function CommunityChallenges() {
             start_date: start.toLocaleDateString('en-CA'),
             end_date: end.toLocaleDateString('en-CA'),
         })
+
+        if (error) {
+            setErrorMsg(error.message)
+            setCreating(false)
+            return
+        }
 
         setNewTitle('')
         setNewDesc('')
@@ -117,7 +125,7 @@ export function CommunityChallenges() {
                     <Trophy className="w-4 h-4 text-amber-400" />
                     <p className="text-sm font-bold text-white">Challenges</p>
                 </div>
-                <Button onClick={() => setShowCreate(!showCreate)} size="sm" variant="outline" className="h-7 text-[10px] border-slate-700">
+                <Button onClick={() => { setShowCreate(!showCreate); setErrorMsg(''); }} size="sm" variant="outline" className="h-7 text-[10px] border-slate-700">
                     <Plus className="w-3 h-3 mr-1" /> Create
                 </Button>
             </div>
@@ -149,6 +157,7 @@ export function CommunityChallenges() {
                             <option value={30}>30 days</option>
                         </select>
                     </div>
+                    {errorMsg && <p className="text-xs text-red-400 mb-3 text-center bg-red-900/20 p-2 rounded">{errorMsg}</p>}
                     <Button onClick={create} disabled={creating || !newTitle.trim()} className="w-full bg-amber-600 hover:bg-amber-700 text-sm">
                         {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Challenge'}
                     </Button>

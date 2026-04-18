@@ -76,12 +76,14 @@ export function PushNotificationToggle() {
             // Save to Supabase
             const { data: { user } } = await supabase.auth.getUser()
             if (user) {
+                const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata'
                 await supabase.from('push_subscriptions').upsert({
                     user_id: user.id,
                     endpoint: subJSON.endpoint,
                     p256dh: subJSON.keys?.p256dh || '',
                     auth: subJSON.keys?.auth || '',
-                    device_type: navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'
+                    device_type: navigator.userAgent.includes('Mobile') ? 'Mobile' : 'Desktop',
+                    timezone: userTimezone
                 }, { onConflict: 'user_id' })
             }
 
