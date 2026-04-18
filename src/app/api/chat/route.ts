@@ -45,8 +45,8 @@ export async function POST(req: Request) {
             messages,
         })
 
-        // @ts-ignore - bypass AI SDK type mismatch on Vercel build
-        return result.toDataStreamResponse()
+        // The AI SDK version you have uses 'toTextStreamResponse'
+        return result.toTextStreamResponse()
 
     } catch (error: any) {
         console.error("SYNCBOT CHAT API ERROR:", error)
