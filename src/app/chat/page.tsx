@@ -85,25 +85,16 @@ export default function ChatPage() {
                         const { done, value } = await reader.read()
                         if (done) break
                         
-                        // the streamText function sends tokens with a prefix (e.g. 0:"Hello"), we need to extract the text
-                        const chunk = decoder.decode(value)
-                        const lines = chunk.split('\n').filter(Boolean)
+                        // Since we switched to toTextStreamResponse(), 
+                        // the stream gives us raw text chunks directly!
+                        const chunk = decoder.decode(value, { stream: true })
+                        responseText += chunk
                         
-                        for (const line of lines) {
-                            if (line.startsWith('0:')) {
-                                try {
-                                    const text = JSON.parse(line.slice(2))
-                                    responseText += text
-                                    setMessages(prev => {
-                                        const newMsgs = [...prev]
-                                        newMsgs[newMsgs.length - 1].content = responseText
-                                        return newMsgs
-                                    })
-                                } catch (e) {
-                                    console.error("Error parsing streaming chunk", e)
-                                }
-                            }
-                        }
+                        setMessages(prev => {
+                            const newMsgs = [...prev]
+                            newMsgs[newMsgs.length - 1].content = responseText
+                            return newMsgs
+                        })
                     }
                 }
             } else {
