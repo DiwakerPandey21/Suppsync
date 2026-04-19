@@ -98,10 +98,15 @@ export default function ChatPage() {
                     }
                 }
             } else {
-                setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I had trouble thinking. Try again!' }])
+                let errorMsg = 'Sorry, I had trouble thinking. Try again!'
+                try {
+                    const errObj = await res.json()
+                    if (errObj.error) errorMsg = `Server Error: ${errObj.error}`
+                } catch (e) {}
+                setMessages(prev => [...prev, { role: 'assistant', content: errorMsg }])
             }
-        } catch {
-            setMessages(prev => [...prev, { role: 'assistant', content: 'Network error. Please check your connection.' }])
+        } catch (e: any) {
+            setMessages(prev => [...prev, { role: 'assistant', content: 'Network error: ' + String(e) }])
         }
 
         setIsLoading(false)
