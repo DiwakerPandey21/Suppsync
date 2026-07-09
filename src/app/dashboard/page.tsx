@@ -254,7 +254,7 @@ export default function DashboardPage() {
                 .select('id')
                 .eq('user_id', user.id)
                 .eq('record_date', todayStr)
-                .single()
+                .maybeSingle()
 
             setHasCheckedInToday(!!subjectiveScore)
 

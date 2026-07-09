@@ -39,7 +39,7 @@ export function MoodLogger() {
             .select('id')
             .eq('user_id', user.id)
             .eq('log_date', todayStr)
-            .single()
+            .maybeSingle()
         if (data) setAlreadyLogged(true)
     }
 
