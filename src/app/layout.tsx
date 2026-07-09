@@ -38,9 +38,6 @@ export default function RootLayout({
             opacity: 0.18 
           }}
         />
-
-        {/* Organic animated grain overlay */}
-        <div className="grain-overlay" />
         
         <div className="relative z-10">
           <SplashScreen>

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import {
     Line,
     LineChart,
@@ -25,7 +26,23 @@ interface CorrelationChartProps {
 }
 
 export function CorrelationChart({ data }: CorrelationChartProps) {
+    const [isMounted, setIsMounted] = useState(false)
+
+    useEffect(() => {
+        setIsMounted(true)
+    }, [])
+
     if (!data || data.length === 0) return null
+
+    if (!isMounted) {
+        return (
+            <div className="w-full px-4 mb-8">
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl h-[288px] flex items-center justify-center">
+                    <div className="w-6 h-6 border-t-2 border-b-2 border-blue-500 rounded-full animate-spin"></div>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="w-full px-4 mb-8">

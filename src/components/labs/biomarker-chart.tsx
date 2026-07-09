@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import {
     Line,
     LineChart,
@@ -23,6 +24,20 @@ interface BiomarkerChartProps {
 }
 
 export function BiomarkerChart({ data }: BiomarkerChartProps) {
+    const [isMounted, setIsMounted] = useState(false)
+
+    useEffect(() => {
+        setIsMounted(true)
+    }, [])
+
+    if (!isMounted) {
+        return (
+            <div className="w-full h-full flex items-center justify-center">
+                <div className="w-4 h-4 border-t-2 border-b-2 border-blue-500 rounded-full animate-spin"></div>
+            </div>
+        )
+    }
+
     // Recharts expects data sorted oldest to newest from left to right usually
     // Our SQL pulls newest first, so we reverse it for the chart
     const chartData = [...data]
