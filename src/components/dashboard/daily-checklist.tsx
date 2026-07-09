@@ -84,50 +84,58 @@ export function DailyChecklist({ logs, setLogs, dateStr }: DailyChecklistProps) 
     }
 
     return (
-        <div className="space-y-4 w-full px-4">
-            <h2 className="text-xl font-bold tracking-tight text-white mb-4">Today&apos;s Stack</h2>
+        <div className="space-y-4 w-full px-4 mb-6">
+            <div className="flex items-center justify-between mb-2 px-1">
+                <h2 className="text-lg font-black tracking-tight text-white uppercase">Today&apos;s Stack</h2>
+                <span className="text-xs font-bold text-slate-500">{logs.filter(l => l.taken).length}/{logs.length} Done</span>
+            </div>
 
             <div className="space-y-3">
                 {logs.map((log) => (
                     <motion.div
                         key={log.id}
-                        whileTap={log.isWashout ? {} : { scale: 0.98 }}
+                        whileHover={log.isWashout ? {} : { y: -2, scale: 1.01 }}
+                        whileTap={log.isWashout ? {} : { scale: 0.99 }}
                         onClick={() => !log.isWashout && toggleLog(log.id, log.taken, log.log_id)}
                         className={cn(
-                            "flex items-center justify-between p-4 rounded-2xl border transition-all",
+                            "flex items-center justify-between p-5 rounded-3xl border transition-all cursor-pointer relative overflow-hidden",
                             log.isWashout
-                                ? "bg-amber-950/20 border-amber-900/30 cursor-default"
+                                ? "bg-amber-500/[0.02] border-amber-500/20 cursor-default"
                                 : log.taken
-                                    ? "bg-slate-900 border-slate-800 opacity-70 cursor-pointer"
-                                    : "bg-slate-900/50 border-slate-800 hover:border-slate-700 cursor-pointer"
+                                    ? "glass-panel border-white/[0.04] opacity-50"
+                                    : "glass-panel-interactive border-white/[0.07]"
                         )}
                     >
-                        <div className="flex items-center space-x-4">
-                            {/* Color indicator dot */}
-                            <div
-                                className="w-3 h-3 rounded-full shadow-sm"
-                                style={{ backgroundColor: log.color, opacity: log.isWashout ? 0.3 : log.taken ? 0.5 : 1 }}
-                            />
+                        {/* Edge left glow line matching supplement theme color */}
+                        <div 
+                            className="absolute left-0 top-0 bottom-0 w-[4px]" 
+                            style={{ 
+                                backgroundColor: log.color,
+                                boxShadow: `0 0 10px ${log.color}`,
+                                opacity: log.isWashout ? 0.2 : log.taken ? 0.3 : 1 
+                            }}
+                        />
 
+                        <div className="flex items-center space-x-4 pl-2">
                             <div>
                                 <p className={cn(
-                                    "font-medium transition-colors",
+                                    "font-black text-sm tracking-tight transition-colors duration-300",
                                     log.isWashout ? "text-amber-500/70" : log.taken ? "text-slate-500 line-through" : "text-white"
                                 )}>
                                     {log.name}
                                 </p>
-                                <div className="flex items-center space-x-2">
-                                    <p className="text-[11px] text-slate-500 font-medium">
+                                <div className="flex items-center space-x-2 mt-1">
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
                                         {log.amount} • {log.timingDisplay || 'Morning'}
                                     </p>
                                     {log.isSolar && (
-                                        <div className="flex items-center space-x-1 px-1.5 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-[9px] font-bold text-amber-500">
-                                            <span>SOLAR SYNC</span>
+                                        <div className="flex items-center space-x-1 px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[8px] font-black text-blue-400 tracking-widest uppercase">
+                                            <span>Solar Sync</span>
                                         </div>
                                     )}
                                     {log.isWashout && (
-                                        <span className="text-[9px] uppercase font-black tracking-wider bg-amber-500/20 text-amber-500 px-1.5 py-0.5 rounded">
-                                            Washout
+                                        <span className="text-[8px] uppercase font-black tracking-widest bg-amber-500/10 border border-amber-500/20 text-amber-500 px-2 py-0.5 rounded-full">
+                                            Washout Cycle
                                         </span>
                                     )}
                                 </div>
@@ -136,13 +144,15 @@ export function DailyChecklist({ logs, setLogs, dateStr }: DailyChecklistProps) 
 
                         {/* Checkbox circle or Pause icon */}
                         {log.isWashout ? (
-                            <PauseCircle className="w-6 h-6 text-amber-500/50" />
+                            <PauseCircle className="w-5 h-5 text-amber-500/50" />
                         ) : (
                             <div className={cn(
-                                "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
-                                log.taken ? "bg-[#3b82f6] border-[#3b82f6]" : "border-slate-600"
+                                "w-6 h-6 rounded-full border flex items-center justify-center transition-all duration-300 shadow-sm",
+                                log.taken 
+                                    ? "bg-blue-500 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.4)]" 
+                                    : "border-white/20 hover:border-white/40 bg-white/[0.02]"
                             )}>
-                                {log.taken && <Check className="w-4 h-4 text-white" />}
+                                {log.taken && <Check className="w-3.5 h-3.5 text-white stroke-[3px]" />}
                             </div>
                         )}
                     </motion.div>

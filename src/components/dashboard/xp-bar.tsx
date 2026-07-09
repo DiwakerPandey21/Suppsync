@@ -25,6 +25,8 @@ function getLevelColor(level: number): string {
     return 'from-red-500 to-orange-400'
 }
 
+import { GlassCard } from './glass-card'
+
 export function XpBar() {
     const supabase = createClient()
     const [xp, setXp] = useState(0)
@@ -68,29 +70,31 @@ export function XpBar() {
     const progress = (xpInCurrentLevel / XP_PER_LEVEL) * 100
 
     return (
-        <div className="w-full px-4 mb-4">
-            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-4">
-                <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center space-x-2">
-                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${getLevelColor(level)} flex items-center justify-center`}>
-                            <Star className="w-4 h-4 text-white" />
+        <div className="w-full px-4 mb-6">
+            <GlassCard padding={false} className="p-5 border-white/[0.05] relative overflow-hidden bg-gradient-to-br from-white/[0.02] to-transparent">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center space-x-3">
+                        <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${getLevelColor(level)} flex items-center justify-center shadow-lg shadow-black/30 border border-white/[0.1]`}>
+                            <Star className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <p className="text-xs font-bold text-white">Level {level}</p>
-                            <p className="text-[10px] text-slate-500">{getLevelTitle(level)}</p>
+                            <p className="text-sm font-black text-white tracking-tight leading-none mb-1">Level {level}</p>
+                            <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 bg-white/[0.04] border border-white/[0.05] px-2 py-0.5 rounded-md">
+                                {getLevelTitle(level)}
+                            </span>
                         </div>
                     </div>
-                    <div className="flex items-center space-x-1 text-right relative">
-                        <Zap className="w-3.5 h-3.5 text-amber-400" />
-                        <span className="text-xs font-bold text-amber-400">{xp} XP</span>
+                    <div className="flex items-center space-x-1.5 text-right relative bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-2xl">
+                        <Zap className="w-4 h-4 text-amber-400 fill-amber-400" />
+                        <span className="text-xs font-black text-amber-300 tracking-tight">{xp} XP</span>
 
                         {/* XP Gain popup */}
                         {showGain && (
                             <motion.span
-                                className="absolute -top-6 right-0 text-xs font-black text-green-400"
-                                initial={{ opacity: 1, y: 0 }}
-                                animate={{ opacity: 0, y: -20 }}
-                                transition={{ duration: 1.5 }}
+                                className="absolute -top-7 right-2 text-xs font-black text-green-400 drop-shadow-[0_0_10px_rgba(74,222,128,0.5)]"
+                                initial={{ opacity: 1, y: 5 }}
+                                animate={{ opacity: 0, y: -25 }}
+                                transition={{ type: 'spring', stiffness: 100, damping: 10 }}
                             >
                                 +{gainAmount} XP
                             </motion.span>
@@ -98,17 +102,20 @@ export function XpBar() {
                     </div>
                 </div>
 
-                {/* Progress Bar */}
-                <div className="h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                {/* Progress Bar with neon inner tracks and rounded capsules */}
+                <div className="relative h-3 bg-white/[0.03] border border-white/[0.04] rounded-full overflow-hidden p-[1px]">
                     <motion.div
-                        className={`h-full rounded-full bg-gradient-to-r ${getLevelColor(level)}`}
+                        className={`h-full rounded-full bg-gradient-to-r ${getLevelColor(level)} shadow-[0_0_12px_rgba(59,130,246,0.3)]`}
                         initial={{ width: 0 }}
                         animate={{ width: `${progress}%` }}
-                        transition={{ duration: 0.8, ease: 'easeOut' }}
+                        transition={{ type: 'spring', stiffness: 80, damping: 15 }}
                     />
                 </div>
-                <p className="text-[9px] text-slate-600 mt-1 text-right">{xpInCurrentLevel} / {XP_PER_LEVEL} XP to Level {level + 1}</p>
-            </div>
+                <div className="flex justify-between items-center mt-2 px-1">
+                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">EXP Progress</p>
+                    <p className="text-[10px] font-bold text-slate-400">{xpInCurrentLevel} / {XP_PER_LEVEL} XP to next level</p>
+                </div>
+            </GlassCard>
         </div>
     )
 }

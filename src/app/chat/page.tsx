@@ -113,41 +113,82 @@ export default function ChatPage() {
     }
 
     return (
-        <div className="flex flex-col h-screen pt-4 pb-20">
+        <div className="flex flex-col h-screen pt-6 pb-24 relative overflow-hidden bg-background">
+            {/* Soft decorative background glows */}
+            <div className="absolute top-[20%] left-[-10%] w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-[80px] pointer-events-none" />
+            <div className="absolute bottom-[30%] right-[-10%] w-[350px] h-[350px] bg-purple-500/5 rounded-full blur-[100px] pointer-events-none" />
+
             {/* Header */}
-            <div className="px-4 mb-4">
-                <div className="flex items-center space-x-2">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-600 to-blue-600 flex items-center justify-center">
+            <div className="px-6 mb-6 z-10">
+                <div className="flex items-center space-x-3">
+                    <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-lg shadow-blue-500/20 border border-white/[0.1]">
                         <Bot className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-black text-white">SuppSync AI</h1>
-                        <p className="text-[10px] text-slate-500">Your personal supplement coach</p>
+                        <h1 className="text-lg font-black text-white tracking-tight leading-none mb-1">SyncBot AI</h1>
+                        <div className="flex items-center space-x-1.5">
+                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                            <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Intelligent Coach Online</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Messages */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 space-y-3">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 space-y-4 z-10 pb-4">
                 {messages.length === 0 && (
-                    <div className="flex flex-col items-center justify-center h-full text-center">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-600/20 to-blue-600/20 border border-violet-500/20 flex items-center justify-center mb-4">
-                            <Sparkles className="w-8 h-8 text-violet-400" />
+                    <div className="flex flex-col items-center justify-center h-full text-center py-10">
+                        {/* Animated Glowing AI Companion Orb */}
+                        <div className="relative w-28 h-28 mb-8 flex items-center justify-center">
+                            {/* Inner Pulsating Circle */}
+                            <motion.div 
+                                className="absolute w-20 h-20 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 opacity-30 blur-md"
+                                animate={{
+                                    scale: [0.9, 1.2, 0.9],
+                                    opacity: [0.3, 0.6, 0.3]
+                                }}
+                                transition={{
+                                    duration: 4,
+                                    repeat: Infinity,
+                                    ease: 'easeInOut'
+                                }}
+                            />
+                            {/* Core Orb */}
+                            <motion.div 
+                                className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-400 via-purple-500 to-cyan-400 flex items-center justify-center shadow-[0_0_35px_rgba(168,85,247,0.5)] border border-white/[0.2]"
+                                animate={{
+                                    y: [0, -6, 0]
+                                }}
+                                transition={{
+                                    duration: 3,
+                                    repeat: Infinity,
+                                    ease: 'easeInOut'
+                                }}
+                            >
+                                <Sparkles className="w-7 h-7 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+                            </motion.div>
                         </div>
-                        <p className="text-sm font-bold text-white mb-2">Ask me anything about supplements</p>
-                        <div className="space-y-2 mt-4">
+
+                        <h2 className="text-xl font-black text-white tracking-tight mb-2">Supplement Intelligence</h2>
+                        <p className="text-xs text-slate-400 max-w-[260px] leading-relaxed mb-6">
+                            Ask me anything about your stack, dosage timings, or biochemical compatibility.
+                        </p>
+
+                        <div className="space-y-2.5 w-full max-w-xs mt-2">
                             {[
                                 'What supplements help with sleep?',
                                 'Should I take creatine with food?',
                                 'Best time for Vitamin D3?',
                             ].map((q, i) => (
-                                <button
+                                <motion.button
                                     key={i}
                                     onClick={() => { setInput(q); }}
-                                    className="block w-full text-xs text-slate-400 bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-2.5 hover:border-violet-500/30 hover:text-violet-300 transition-colors text-left"
+                                    whileHover={{ y: -1, scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className="block w-full text-xs text-slate-300 bg-white/[0.02] border border-white/[0.06] rounded-2xl px-5 py-3 hover:border-blue-500/25 hover:text-white transition-all text-left shadow-sm"
                                 >
                                     {q}
-                                </button>
+                                </motion.button>
                             ))}
                         </div>
                     </div>
@@ -158,25 +199,25 @@ export default function ChatPage() {
                         <motion.div
                             key={i}
                             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                            initial={{ opacity: 0, y: 10 }}
+                            initial={{ opacity: 0, y: 15 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.2 }}
+                            transition={{ type: 'spring', stiffness: 250, damping: 22 }}
                         >
-                            <div className={`flex items-start space-x-2 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-                                <div className={`w-7 h-7 rounded-lg flex-shrink-0 flex items-center justify-center ${
+                            <div className={`flex items-start space-x-3 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                                <div className={`w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center shadow-md ${
                                     msg.role === 'user'
-                                        ? 'bg-blue-600'
-                                        : 'bg-gradient-to-br from-violet-600 to-blue-600'
+                                        ? 'bg-blue-600 border border-white/[0.1]'
+                                        : 'bg-gradient-to-br from-blue-500 to-purple-500 border border-white/[0.1]'
                                 }`}>
                                     {msg.role === 'user'
-                                        ? <User className="w-3.5 h-3.5 text-white" />
-                                        : <Bot className="w-3.5 h-3.5 text-white" />
+                                        ? <User className="w-4 h-4 text-white" />
+                                        : <Bot className="w-4 h-4 text-white" />
                                     }
                                 </div>
-                                <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                                <div className={`rounded-3xl px-5 py-3.5 text-sm leading-relaxed shadow-lg ${
                                     msg.role === 'user'
-                                        ? 'bg-blue-600 text-white rounded-br-md'
-                                        : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-md'
+                                        ? 'bg-blue-600/90 text-white rounded-br-md border border-blue-500/20'
+                                        : 'glass-panel text-slate-200 rounded-bl-md border-white/[0.05]'
                                 }`}>
                                     <p className="whitespace-pre-wrap">{msg.content}</p>
                                 </div>
@@ -187,18 +228,18 @@ export default function ChatPage() {
 
                 {isLoading && (
                     <motion.div
-                        className="flex items-start space-x-2"
+                        className="flex items-start space-x-3"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                     >
-                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-600 to-blue-600 flex items-center justify-center">
-                            <Bot className="w-3.5 h-3.5 text-white" />
+                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center border border-white/[0.1] shadow-md">
+                            <Bot className="w-4 h-4 text-white" />
                         </div>
-                        <div className="bg-slate-900 border border-slate-800 rounded-2xl rounded-bl-md px-4 py-3">
-                            <div className="flex space-x-1">
-                                <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                                <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                                <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        <div className="glass-panel border-white/[0.05] rounded-3xl rounded-bl-md px-5 py-4">
+                            <div className="flex space-x-1.5">
+                                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                             </div>
                         </div>
                     </motion.div>
@@ -206,22 +247,24 @@ export default function ChatPage() {
             </div>
 
             {/* Input */}
-            <div className="px-4 pt-3 pb-2 border-t border-slate-800/50">
-                <div className="flex items-center space-x-2">
+            <div className="px-6 pt-4 pb-6 z-10">
+                <div className="flex items-center space-x-2.5 glass-panel border-white/[0.06] rounded-2xl p-2 shadow-xl">
                     <input
                         value={input}
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && sendMessage()}
-                        placeholder="Ask about supplements..."
-                        className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-violet-500/50"
+                        placeholder="Type stack question..."
+                        className="flex-1 bg-transparent border-none rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-0"
                     />
-                    <button
+                    <motion.button
                         onClick={sendMessage}
                         disabled={!input.trim() || isLoading}
-                        className="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-600 to-blue-600 flex items-center justify-center disabled:opacity-40 hover:opacity-90 transition-opacity"
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center disabled:opacity-40 disabled:pointer-events-none hover:opacity-90 transition-opacity cursor-pointer shadow-md border border-white/[0.08]"
                     >
-                        <Send className="w-4 h-4 text-white" />
-                    </button>
+                        <Send className="w-4.5 h-4.5 text-white" />
+                    </motion.button>
                 </div>
             </div>
         </div>

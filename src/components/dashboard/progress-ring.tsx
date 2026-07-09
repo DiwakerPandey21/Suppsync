@@ -16,66 +16,77 @@ export function ProgressRing({ completed, total }: ProgressRingProps) {
     const isPerfect = percentage === 100
 
     return (
-        <div className="relative flex items-center justify-center py-6">
-            {/* Animated glow behind the ring */}
+        <div className="relative flex items-center justify-center py-8">
+            {/* Ambient Cosmic Background Glow behind the Ring */}
             <motion.div
-                className="absolute rounded-full"
+                className="absolute rounded-full pointer-events-none"
                 style={{
-                    width: 180,
-                    height: 180,
+                    width: 200,
+                    height: 200,
                     background: isPerfect
-                        ? 'radial-gradient(circle, rgba(34,197,94,0.3) 0%, rgba(34,197,94,0) 70%)'
-                        : `radial-gradient(circle, rgba(59,130,246,${0.05 + glowIntensity * 0.25}) 0%, rgba(59,130,246,0) 70%)`,
-                    filter: `blur(${10 + glowIntensity * 15}px)`
+                        ? 'radial-gradient(circle, rgba(168,85,247,0.15) 0%, rgba(59,130,246,0.1) 40%, rgba(0,0,0,0) 75%)'
+                        : `radial-gradient(circle, rgba(59,130,246,${0.1 + glowIntensity * 0.15}) 0%, rgba(59,130,246,0) 70%)`,
+                    filter: `blur(${15 + glowIntensity * 10}px)`
                 }}
                 animate={{
-                    scale: isPerfect ? [1, 1.15, 1] : [1, 1.05, 1],
-                    opacity: [0.6, 1, 0.6]
+                    scale: isPerfect ? [1, 1.08, 1] : [1, 1.03, 1],
+                    opacity: [0.7, 0.9, 0.7]
                 }}
                 transition={{
-                    duration: isPerfect ? 1.5 : 3,
+                    duration: isPerfect ? 2.5 : 4,
                     repeat: Infinity,
                     ease: 'easeInOut'
                 }}
             />
 
+            {/* Glass Container Ring Wrapper */}
+            <div className="absolute w-[180px] h-[180px] rounded-full border border-white/[0.04] bg-white/[0.01] pointer-events-none" />
+
             <div className="absolute flex flex-col items-center justify-center">
                 <motion.span
-                    className={`text-4xl font-black ${isPerfect ? 'text-green-400' : 'text-white'}`}
+                    className={`text-5xl font-black tracking-tighter ${isPerfect ? 'text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]' : 'text-white text-glow-blue'}`}
                     key={completed}
-                    initial={{ scale: 1.3, opacity: 0 }}
+                    initial={{ scale: 1.15, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                    transition={{ type: 'spring', stiffness: 350, damping: 15 }}
                 >
-                    {completed}
+                    {Math.round(percentage)}%
                 </motion.span>
-                <span className="text-xs text-slate-400 font-medium">of {total} taken</span>
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">
+                    {completed} of {total} Taken
+                </span>
             </div>
 
-            <svg className="transform -rotate-90 w-40 h-40">
+            <svg className="transform -rotate-90 w-44 h-44 drop-shadow-[0_0_8px_rgba(59,130,246,0.2)]">
+                {/* Gradient Definition */}
+                <defs>
+                    <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#3b82f6" />
+                        <stop offset="100%" stopColor="#a855f7" />
+                    </linearGradient>
+                </defs>
                 <circle
-                    className="text-slate-800"
-                    strokeWidth="12"
+                    className="text-white/[0.03]"
+                    strokeWidth="8"
                     stroke="currentColor"
                     fill="transparent"
                     r={radius}
-                    cx="80"
-                    cy="80"
+                    cx="88"
+                    cy="88"
                 />
                 <motion.circle
-                    className={isPerfect ? 'text-green-500' : 'text-[#3b82f6]'}
-                    strokeWidth="12"
+                    strokeWidth="8"
                     strokeDasharray={circumference}
                     strokeDashoffset={strokeDashoffset}
                     strokeLinecap="round"
-                    stroke="currentColor"
+                    stroke="url(#ringGradient)"
                     fill="transparent"
                     r={radius}
-                    cx="80"
-                    cy="80"
+                    cx="88"
+                    cy="88"
                     initial={{ strokeDashoffset: circumference }}
                     animate={{ strokeDashoffset }}
-                    transition={{ duration: 1, ease: "easeOut" }}
+                    transition={{ type: 'spring', stiffness: 100, damping: 20 }}
                 />
             </svg>
         </div>
