@@ -67,111 +67,118 @@ export default function LabsPage() {
 
     return (
         <div className="flex min-h-screen flex-col pt-8 pb-32 px-4">
-            {/* Genotypes Section (V10) */}
-            <div className="w-full flex justify-between items-end mb-6">
-                <div>
-                    <h1 className="text-3xl font-black text-white tracking-tight">Genetics</h1>
-                    <p className="text-slate-400 text-sm mt-1">Deep biological sync for AI.</p>
-                </div>
-                {userId && <GenotypeLogger userId={userId} onUpdate={fetchData} />}
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                
+                {/* Column 1: Genetics */}
+                <div className="space-y-6">
+                    <div className="w-full flex justify-between items-end pb-4 border-b border-white/[0.05]">
+                        <div>
+                            <h1 className="text-3xl font-black text-white tracking-tight">Genetics</h1>
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mt-1">DNA Sync for protocol AI</p>
+                        </div>
+                        {userId && <GenotypeLogger userId={userId} onUpdate={fetchData} />}
+                    </div>
 
-            {isLoading ? (
-                <div className="w-full h-24 flex items-center justify-center">
-                    <div className="w-6 h-6 border-t-2 border-b-2 border-indigo-500 rounded-full animate-spin"></div>
-                </div>
-            ) : genotypes.length === 0 ? (
-                <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 flex items-center mb-10">
-                    <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center mr-4 border border-indigo-500/20">
-                        <Dna className="w-6 h-6 text-indigo-500" />
-                    </div>
-                    <div>
-                        <h3 className="text-sm font-bold text-white mb-1">No DNA Data</h3>
-                        <p className="text-xs text-slate-400 max-w-[200px]">Log mutations like MTHFR to get highly personalized protocol AI recommendations.</p>
-                    </div>
-                </div>
-            ) : (
-                <div className="grid grid-cols-2 gap-3 mb-10">
-                    {genotypes.map(g => (
-                        <div key={g.id} className="bg-gradient-to-br from-slate-900 to-slate-950 border border-indigo-500/20 rounded-2xl p-4 relative group">
-                            <button 
-                                onClick={() => deleteGenotype(g.id)}
-                                className="absolute top-2 right-2 p-1.5 bg-red-500/10 text-red-400 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                                <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                            <Dna className="w-4 h-4 text-indigo-400 mb-2" />
-                            <h3 className="font-bold text-white text-sm truncate">{g.marker_name}</h3>
-                            <div className="mt-1 inline-block px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-bold text-indigo-300">
-                                {g.status}
+                    {isLoading ? (
+                        <div className="w-full h-24 flex items-center justify-center">
+                            <div className="w-6 h-6 border-t-2 border-b-2 border-indigo-500 rounded-full animate-spin"></div>
+                        </div>
+                    ) : genotypes.length === 0 ? (
+                        <div className="w-full bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 flex items-center shadow-sm">
+                            <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center mr-4 border border-indigo-500/20">
+                                <Dna className="w-6 h-6 text-indigo-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-bold text-white mb-1">No DNA Data Logged</h3>
+                                <p className="text-[10px] text-slate-400 max-w-[200px]">Log biological mutations like MTHFR to unlock highly customized AI stack suggestions.</p>
                             </div>
                         </div>
-                    ))}
+                    ) : (
+                        <div className="grid grid-cols-2 gap-3">
+                            {genotypes.map(g => (
+                                <div key={g.id} className="bg-gradient-to-br from-white/[0.02] to-transparent border border-white/[0.06] rounded-3xl p-4 relative group hover:border-indigo-500/30 transition-all duration-300">
+                                    <button 
+                                        onClick={() => deleteGenotype(g.id)}
+                                        className="absolute top-3 right-3 p-1.5 bg-red-500/10 text-red-400 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                    <Dna className="w-4 h-4 text-indigo-400 mb-2" />
+                                    <h3 className="font-bold text-white text-sm truncate">{g.marker_name}</h3>
+                                    <div className="mt-1.5 inline-block px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[9px] font-black text-indigo-300 uppercase tracking-wider">
+                                        {g.status}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
-            )}
 
-            {/* Biomarker Section */}
-            <div className="w-full flex justify-between items-end mb-8 border-t border-slate-800 pt-8">
-                <div>
-                    <h1 className="text-3xl font-black text-white tracking-tight">Lab Results</h1>
-                    <p className="text-slate-400 text-sm mt-1">Track biomarkers to measure ROI.</p>
-                </div>
-                <LogBiomarkerDialog />
-            </div>
-
-            {isLoading ? (
-                <div className="w-full h-48 flex items-center justify-center">
-                    <div className="w-8 h-8 border-t-2 border-b-2 border-blue-500 rounded-full animate-spin"></div>
-                </div>
-            ) : Object.keys(groupedBiomarkers).length === 0 ? (
-                <div className="w-full bg-slate-900 border border-slate-800 rounded-3xl p-8 flex flex-col items-center justify-center text-center mt-4 shadow-xl">
-                    <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-4 border border-blue-500/20">
-                        <Droplet className="w-8 h-8 text-blue-500" />
-                    </div>
-                    <h3 className="text-xl font-bold text-white mb-2">No Lab Data Yet</h3>
-                    <p className="text-slate-400 text-sm mb-6 max-w-[250px]">
-                        Start logging your periodic blood work (like Vitamin D or Testosterone) to track the effectiveness of your supplements.
-                    </p>
-                    <LogBiomarkerDialog />
-                </div>
-            ) : (
+                {/* Column 2: Lab Results / Biomarkers */}
                 <div className="space-y-6">
-                    {/* Render latest values and a trend line for each unique biomarker */}
-                    {Object.entries(groupedBiomarkers).map(([name, history]) => {
-                        const latest = history[0] // Sorted by date desc in SQL
+                    <div className="w-full flex justify-between items-end pb-4 border-b border-white/[0.05]">
+                        <div>
+                            <h1 className="text-3xl font-black text-white tracking-tight">Lab Results</h1>
+                            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mt-1">Biomarker tracking metrics</p>
+                        </div>
+                        <LogBiomarkerDialog />
+                    </div>
 
-                        return (
-                            <div key={name} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="flex items-center space-x-3">
-                                        <div className="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center border border-slate-700">
-                                            <Activity className="w-5 h-5 text-blue-400" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-white text-lg leading-tight">{name}</h3>
-                                            <p className="text-xs text-slate-500 mt-0.5">
-                                                Last active: {new Date(latest.record_date).toLocaleDateString()}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="text-right">
-                                        <div className="flex items-baseline space-x-1 justify-end">
-                                            <span className="text-2xl font-black text-white">{latest.value}</span>
-                                            <span className="text-xs font-semibold text-slate-400">{latest.unit}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Recharts Graph representing historical data */}
-                                <div className="w-full h-32 mt-2">
-                                    <BiomarkerChart data={history} />
-                                </div>
+                    {isLoading ? (
+                        <div className="w-full h-48 flex items-center justify-center">
+                            <div className="w-8 h-8 border-t-2 border-b-2 border-blue-500 rounded-full animate-spin"></div>
+                        </div>
+                    ) : Object.keys(groupedBiomarkers).length === 0 ? (
+                        <div className="w-full bg-white/[0.02] border border-white/[0.06] rounded-3xl p-8 flex flex-col items-center justify-center text-center shadow-md">
+                            <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mb-4 border border-blue-500/20">
+                                <Droplet className="w-8 h-8 text-blue-400" />
                             </div>
-                        )
-                    })}
+                            <h3 className="text-lg font-bold text-white mb-2">No Lab Records Yet</h3>
+                            <p className="text-slate-400 text-xs mb-6 max-w-[240px] leading-relaxed">
+                                Log blood panel biomarkers (like Vitamin D, Iron, or Lipids) to check supplement efficacy.
+                            </p>
+                            <LogBiomarkerDialog />
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {Object.entries(groupedBiomarkers).map(([name, history]) => {
+                                const latest = history[0]
+
+                                return (
+                                    <div key={name} className="bg-white/[0.01] border border-white/[0.06] rounded-3xl p-5 shadow-lg relative overflow-hidden group hover:border-blue-500/20 transition-all duration-300">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className="flex items-center space-x-3">
+                                                <div className="w-10 h-10 bg-white/[0.03] rounded-xl flex items-center justify-center border border-white/[0.06]">
+                                                    <Activity className="w-5 h-5 text-blue-400" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-white text-base leading-tight">{name}</h3>
+                                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mt-1">
+                                                        Last Logged: {new Date(latest.record_date).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="text-right">
+                                                <div className="flex items-baseline space-x-1 justify-end bg-blue-500/10 border border-blue-500/25 px-2.5 py-1 rounded-xl">
+                                                    <span className="text-xl font-black text-blue-400">{latest.value}</span>
+                                                    <span className="text-[10px] font-bold text-blue-500">{latest.unit}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Recharts Graph */}
+                                        <div className="w-full h-28 mt-2">
+                                            <BiomarkerChart data={history} />
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    )}
                 </div>
-            )}
+
+            </div>
         </div>
     )
 }

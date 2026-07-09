@@ -340,10 +340,10 @@ export default function DashboardPage() {
             <ConfettiBurst trigger={confettiTrigger} />
 
             {/* Header section (Date + Streak) */}
-            <div className="w-full px-6 flex justify-between items-end mb-6">
+            <div className="w-full px-4 flex justify-between items-end mb-8">
                 <div>
-                    <p className="text-slate-400 text-sm font-medium tracking-wide uppercase">{date}</p>
-                    <h1 className="text-3xl font-black text-white tracking-tight mt-1">Welcome Back!</h1>
+                    <p className="text-slate-400 text-xs font-bold tracking-widest uppercase">{date}</p>
+                    <h1 className="text-4xl font-black text-white tracking-tight mt-1">Welcome Back!</h1>
                 </div>
 
                 <div className="flex items-center space-x-2">
@@ -363,93 +363,109 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            {/* XP Bar */}
-            <XpBar />
+            {/* Fully Responsive Grid Layout */}
+            <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-6 items-start px-2">
+                
+                {/* Column 1: XP, Check-in, Mood, Challenges, Zen, Vision Scanner */}
+                <div className="md:col-span-4 space-y-6">
+                    {/* XP Bar */}
+                    <XpBar />
 
-            {/* Daily Subjective Check-in (Only visible if not submitted today) */}
-            {!isLoading && !hasCheckedInToday && userId && (
-                <div className="w-full px-4 mb-6">
-                    <DailyCheckIn userId={userId} currentDate={todayStr} />
-                </div>
-            )}
-
-            {/* Mood Logger */}
-            <MoodLogger />
-
-            {/* Daily Challenge */}
-            <DailyChallenge />
-
-            {/* Zen Mode Button */}
-            <div className="w-full px-4 mb-6">
-                <Link href="/routine" className="block w-full">
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-2xl p-4 flex items-center justify-between shadow-[0_0_20px_rgba(59,130,246,0.3)] transition-all">
-                        <div className="flex items-center space-x-3">
-                            <div className="bg-white/20 p-2 rounded-xl">
-                                <span className="text-xl">🧘‍♂️</span>
-                            </div>
-                            <div className="text-left">
-                                <h3 className="font-bold text-white text-sm">Zen Mode</h3>
-                                <p className="text-[10px] text-blue-100">Distraction-free routine player</p>
-                            </div>
+                    {/* Daily Subjective Check-in (Only visible if not submitted today) */}
+                    {!isLoading && !hasCheckedInToday && userId && (
+                        <div className="w-full px-4">
+                            <DailyCheckIn userId={userId} currentDate={todayStr} />
                         </div>
-                        <div className="bg-white/10 rounded-full px-4 py-2 text-xs font-bold text-white">
-                            Start →
-                        </div>
+                    )}
+
+                    {/* Mood Logger */}
+                    <MoodLogger />
+
+                    {/* Daily Challenge */}
+                    <DailyChallenge />
+
+                    {/* Zen Mode Button */}
+                    <div className="w-full px-4">
+                        <Link href="/routine" className="block w-full">
+                            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-3xl p-5 flex items-center justify-between shadow-[0_0_25px_rgba(59,130,246,0.25)] transition-all">
+                                <div className="flex items-center space-x-3">
+                                    <div className="bg-white/20 p-2.5 rounded-xl">
+                                        <span className="text-xl">🧘‍♂️</span>
+                                    </div>
+                                    <div className="text-left">
+                                        <h3 className="font-bold text-white text-sm">Zen Mode</h3>
+                                        <p className="text-[10px] text-blue-100 uppercase tracking-wider font-bold">Distraction-free routine player</p>
+                                    </div>
+                                </div>
+                                <div className="bg-white/10 rounded-full px-4 py-2 text-xs font-bold text-white">
+                                    Start →
+                                </div>
+                            </div>
+                        </Link>
                     </div>
-                </Link>
+
+                    {/* V10: Vision AI Handful Scanner */}
+                    <div className="w-full px-4">
+                        <HandfulScanner onLogsCompleted={refreshLogs} />
+                    </div>
+
+                    {/* Streak Freeze */}
+                    {!isLoading && userId && (
+                        <div className="w-full px-4">
+                            <StreakFreeze currentStreak={streak} userId={userId} />
+                        </div>
+                    )}
+                </div>
+
+                {/* Column 2: Progress Ring, Timeline, Today's Checklist */}
+                <div className="md:col-span-4 space-y-6">
+                    {/* Main Progress Ring */}
+                    <ProgressRing completed={completed} total={total} />
+
+                    {/* Supplement Timeline */}
+                    <SupplementTimeline />
+
+                    {/* The Checklist */}
+                    <DailyChecklist logs={todayLogs} setLogs={setTodayLogs} dateStr={todayStr} />
+                </div>
+
+                {/* Column 3: Stock/Expiry Alerts, Weekly Report, recommendations, heatmaps, budget */}
+                <div className="md:col-span-4 space-y-6">
+                    {/* Restock Alerts */}
+                    <InventoryAlerts alerts={lowStockAlerts} />
+
+                    {/* Expiry Alerts */}
+                    <ExpiryAlerts />
+
+                    {/* Weekly AI Report */}
+                    <WeeklyReport />
+
+                    {/* Smart Recommendations */}
+                    <SmartRecs />
+
+                    {/* Consistency Heatmap */}
+                    <ConsistencyHeatmap data={heatmapData} />
+
+                    {/* AI Correlation Graph */}
+                    {!isLoading && correlationData.length > 0 && (
+                        <CorrelationChart data={correlationData} />
+                    )}
+
+                    {/* Budget Widget */}
+                    {!isLoading && budgetItems.length > 0 && (
+                        <BudgetWidget items={budgetItems} />
+                    )}
+
+                    {/* Smart Timing Optimizer */}
+                    <SmartTimingOptimizer />
+
+                    {/* Log Workout */}
+                    <LogWorkout />
+                </div>
             </div>
-
-            {/* Main Progress Ring */}
-            <ProgressRing completed={completed} total={total} />
-
-            {/* Supplement Timeline */}
-            <SupplementTimeline />
-
-            {/* Restock Alerts */}
-            <InventoryAlerts alerts={lowStockAlerts} />
-
-            {/* Expiry Alerts */}
-            <ExpiryAlerts />
-
-            {/* Weekly AI Report */}
-            <WeeklyReport />
-
-            {/* Smart Recommendations */}
-            <SmartRecs />
-
-            {/* Consistency Heatmap */}
-            <ConsistencyHeatmap data={heatmapData} />
-
-            {/* AI Correlation Graph */}
-            {!isLoading && correlationData.length > 0 && (
-                <CorrelationChart data={correlationData} />
-            )}
-
-            {/* Budget Widget */}
-            {!isLoading && budgetItems.length > 0 && (
-                <BudgetWidget items={budgetItems} />
-            )}
-
-            {/* Smart Timing Optimizer */}
-            <SmartTimingOptimizer />
-
-            {/* Log Workout */}
-            <LogWorkout />
-
-            {/* Streak Freeze */}
-            {!isLoading && userId && <StreakFreeze currentStreak={streak} userId={userId} />}
-
-            {/* V10: Vision AI Handful Scanner */}
-            <div className="w-full px-4 mb-3">
-                <HandfulScanner onLogsCompleted={refreshLogs} />
-            </div>
-
-            {/* The Checklist */}
-            <DailyChecklist logs={todayLogs} setLogs={setTodayLogs} dateStr={todayStr} />
 
             {/* Voice Logger FAB */}
             <VoiceLogger onLogUpdate={refreshLogs} />
-
         </div>
     )
 }

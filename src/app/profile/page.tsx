@@ -120,125 +120,137 @@ export default function ProfilePage() {
 
     return (
         <div className="flex min-h-screen flex-col pt-8 pb-32 px-4">
-            {/* Profile Header */}
-            <div className="text-center mb-8">
-                <motion.div
-                    className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-cyan-500 mx-auto mb-4 flex items-center justify-center text-3xl font-black text-white shadow-lg shadow-blue-500/30"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                >
-                    {userName.charAt(0).toUpperCase()}
-                </motion.div>
-                <h1 className="text-2xl font-black text-white">{userName}</h1>
-                <p className="text-sm text-slate-500 mt-1">Biohacker since Day 1</p>
-            </div>
-
-            {/* Month in Review (V9) */}
-            {userId && <MonthInReview userId={userId} />}
-
-            {/* Lifetime Stats Grid */}
-            <div className="grid grid-cols-3 gap-3 mb-8">
-                {[
-                    { label: 'Doses', value: stats.totalLogsTaken, color: 'text-blue-400' },
-                    { label: 'Streak', value: stats.currentStreak, color: 'text-orange-400' },
-                    { label: 'Days', value: stats.daysActive, color: 'text-green-400' },
-                ].map((stat, i) => (
-                    <motion.div
-                        key={stat.label}
-                        className="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                    >
-                        <p className={`text-2xl font-black ${stat.color}`}>{stat.value}</p>
-                        <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mt-1">{stat.label}</p>
-                    </motion.div>
-                ))}
-            </div>
-
-            {/* Share Profile Card */}
-            <div className="mb-8">
-                <ShareableProfileCard
-                    userName={userName}
-                    totalDoses={stats.totalLogsTaken}
-                    streak={stats.currentStreak}
-                    daysActive={stats.daysActive}
-                    badgesUnlocked={unlockedCount}
-                    totalBadges={badges.length}
-                />
-            </div>
-
-            {/* Quick Links */}
-            <div className="grid grid-cols-2 gap-3 mb-8">
-                <Link href="/insights" className="flex items-center space-x-3 bg-purple-500/10 border border-purple-500/20 rounded-2xl p-4 hover:bg-purple-500/20 transition-colors">
-                    <Brain className="w-5 h-5 text-purple-400" />
-                    <div>
-                        <p className="text-sm font-bold text-white">AI Insights</p>
-                        <p className="text-[10px] text-slate-500">Weekly report</p>
-                    </div>
-                </Link>
-                <Link href="/settings" className="flex items-center space-x-3 bg-slate-900 border border-slate-800 rounded-2xl p-4 hover:bg-slate-800 transition-colors">
-                    <Settings className="w-5 h-5 text-slate-400" />
-                    <div>
-                        <p className="text-sm font-bold text-white">Settings</p>
-                        <p className="text-[10px] text-slate-500">Export & more</p>
-                    </div>
-                </Link>
-            </div>
-
-            {/* Achievements Section */}
-            <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-white flex items-center">
-                    <Trophy className="w-5 h-5 text-yellow-500 mr-2" />
-                    Achievements
-                </h2>
-                <span className="text-xs text-slate-500 font-bold">{unlockedCount}/{badges.length} Unlocked</span>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-                {badges.map((badge, i) => {
-                    const progress = Math.min(100, (badge.currentValue / badge.requirement) * 100)
-                    return (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                
+                {/* Column 1: Info, Stats, Achievements */}
+                <div className="space-y-6">
+                    {/* Profile Header */}
+                    <div className="text-center mb-6">
                         <motion.div
-                            key={badge.id}
-                            className={cn(
-                                "relative flex flex-col items-center p-4 rounded-2xl border text-center transition-all",
-                                badge.unlocked
-                                    ? `${badge.bgColor} border-slate-700`
-                                    : "bg-slate-900/50 border-slate-800/50 opacity-50"
-                            )}
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: badge.unlocked ? 1 : 0.5, scale: 1 }}
-                            transition={{ delay: i * 0.05 }}
+                            className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-cyan-500 mx-auto mb-4 flex items-center justify-center text-3xl font-black text-white shadow-lg shadow-blue-500/30"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
                         >
-                            <div className={cn(
-                                "w-10 h-10 rounded-full flex items-center justify-center mb-2",
-                                badge.unlocked ? badge.bgColor : "bg-slate-800"
-                            )}>
-                                <badge.icon className={cn("w-5 h-5", badge.unlocked ? badge.color : "text-slate-600")} />
-                            </div>
-                            <p className={cn("text-[11px] font-bold leading-tight", badge.unlocked ? "text-white" : "text-slate-600")}>
-                                {badge.name}
-                            </p>
-                            <p className="text-[9px] text-slate-500 mt-1 leading-tight">{badge.description}</p>
-
-                            {!badge.unlocked && (
-                                <div className="w-full mt-2 h-1 bg-slate-800 rounded-full overflow-hidden">
-                                    <div
-                                        className={`h-full rounded-full ${badge.bgColor}`}
-                                        style={{ width: `${progress}%` }}
-                                    />
-                                </div>
-                            )}
+                            {userName.charAt(0).toUpperCase()}
                         </motion.div>
-                    )
-                })}
-            </div>
+                        <h1 className="text-2xl font-black text-white">{userName}</h1>
+                        <p className="text-xs text-slate-500 mt-1 uppercase font-bold tracking-wider">Biohacker Level 1</p>
+                    </div>
 
-            {/* Progress Photos */}
-            <div className="w-full px-4 pt-4">
-                <ProgressPhotos />
+                    {/* Quick Links */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <Link href="/insights" className="flex items-center space-x-3 bg-purple-500/10 border border-purple-500/20 rounded-2xl p-4 hover:bg-purple-500/20 transition-colors">
+                            <Brain className="w-5 h-5 text-purple-400" />
+                            <div>
+                                <p className="text-sm font-bold text-white">AI Insights</p>
+                                <p className="text-[10px] text-slate-500">Weekly report</p>
+                            </div>
+                        </Link>
+                        <Link href="/settings" className="flex items-center space-x-3 bg-slate-900 border border-slate-800 rounded-2xl p-4 hover:bg-slate-800 transition-colors">
+                            <Settings className="w-5 h-5 text-slate-400" />
+                            <div>
+                                <p className="text-sm font-bold text-white">Settings</p>
+                                <p className="text-[10px] text-slate-500">Export & more</p>
+                            </div>
+                        </Link>
+                    </div>
+
+                    {/* Lifetime Stats Grid */}
+                    <div className="grid grid-cols-3 gap-3">
+                        {[
+                            { label: 'Doses', value: stats.totalLogsTaken, color: 'text-blue-400' },
+                            { label: 'Streak', value: stats.currentStreak, color: 'text-orange-400' },
+                            { label: 'Days', value: stats.daysActive, color: 'text-green-400' },
+                        ].map((stat, i) => (
+                            <motion.div
+                                key={stat.label}
+                                className="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.1 }}
+                            >
+                                <p className={`text-2xl font-black ${stat.color}`}>{stat.value}</p>
+                                <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mt-1">{stat.label}</p>
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    {/* Share Profile Card */}
+                    <div>
+                        <ShareableProfileCard
+                            userName={userName}
+                            totalDoses={stats.totalLogsTaken}
+                            streak={stats.currentStreak}
+                            daysActive={stats.daysActive}
+                            badgesUnlocked={unlockedCount}
+                            totalBadges={badges.length}
+                        />
+                    </div>
+
+                    {/* Achievements Section */}
+                    <div>
+                        <div className="mb-4 flex items-center justify-between">
+                            <h2 className="text-lg font-bold text-white flex items-center">
+                                <Trophy className="w-5 h-5 text-yellow-500 mr-2" />
+                                Achievements
+                            </h2>
+                            <span className="text-xs text-slate-500 font-bold">{unlockedCount}/{badges.length} Unlocked</span>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-3">
+                            {badges.map((badge, i) => {
+                                const progress = Math.min(100, (badge.currentValue / badge.requirement) * 100)
+                                return (
+                                    <motion.div
+                                        key={badge.id}
+                                        className={cn(
+                                            "relative flex flex-col items-center p-4 rounded-2xl border text-center transition-all",
+                                            badge.unlocked
+                                                ? `${badge.bgColor} border-slate-700`
+                                                : "bg-slate-900/50 border-slate-800/50 opacity-50"
+                                        )}
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: badge.unlocked ? 1 : 0.5, scale: 1 }}
+                                        transition={{ delay: i * 0.05 }}
+                                    >
+                                        <div className={cn(
+                                            "w-10 h-10 rounded-full flex items-center justify-center mb-2",
+                                            badge.unlocked ? badge.bgColor : "bg-slate-800"
+                                        )}>
+                                            <badge.icon className={cn("w-5 h-5", badge.unlocked ? badge.color : "text-slate-600")} />
+                                        </div>
+                                        <p className={cn("text-[11px] font-bold leading-tight", badge.unlocked ? "text-white" : "text-slate-600")}>
+                                            {badge.name}
+                                        </p>
+                                        <p className="text-[9px] text-slate-500 mt-1 leading-tight">{badge.description}</p>
+
+                                        {!badge.unlocked && (
+                                            <div className="w-full mt-2 h-1 bg-slate-800 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`h-full rounded-full ${badge.bgColor}`}
+                                                    style={{ width: `${progress}%` }}
+                                                />
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                )
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Column 2: Reviews, Photos */}
+                <div className="space-y-6">
+                    {/* Month in Review (V9) */}
+                    {userId && <MonthInReview userId={userId} />}
+
+                    {/* Progress Photos */}
+                    <div className="w-full pt-4">
+                        <ProgressPhotos />
+                    </div>
+                </div>
+
             </div>
         </div>
     )

@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 
 export default function LabsLayout({ children }: { children: ReactNode }) {
     return (
-        <div className="min-h-screen bg-[#0F172A] text-white">
-            <main className="w-full max-w-md mx-auto min-h-screen relative">
+        <div className="min-h-screen bg-background text-foreground pb-24">
+            <main className="w-full max-w-6xl mx-auto px-4 md:px-8 relative z-10">
                 {children}
             </main>
             <BottomNav />
