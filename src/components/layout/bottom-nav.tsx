@@ -26,8 +26,8 @@ export function BottomNav() {
                 {activeIndex >= 0 && (
                     <motion.div
                         className="absolute top-2 bottom-2 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/15"
-                        style={{ width: `${(100 / tabs.length) - 4}%`, marginLeft: '2%' }}
-                        animate={{ x: `${activeIndex * 100}%` }}
+                        style={{ width: `${(100 / tabs.length) - 4}%` }}
+                        animate={{ left: `${activeIndex * (100 / tabs.length) + 2}%` }}
                         transition={{ type: 'spring', stiffness: 350, damping: 28 }}
                     />
                 )}

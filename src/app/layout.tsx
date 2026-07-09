@@ -35,7 +35,7 @@ export default function RootLayout({
           className="fixed inset-0 pointer-events-none z-0 bg-no-repeat bg-cover bg-center select-none"
           style={{ 
             backgroundImage: "url('/bg-cosmic.jpg')",
-            opacity: 0.18 
+            opacity: 0.32 
           }}
         />
         
