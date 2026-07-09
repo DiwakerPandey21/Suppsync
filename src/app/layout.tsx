@@ -30,6 +30,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground relative min-h-screen overflow-x-hidden`}
       >
+        {/* Low-opacity fixed cosmic background image */}
+        <div 
+          className="fixed inset-0 pointer-events-none z-0 bg-no-repeat bg-cover bg-center select-none"
+          style={{ 
+            backgroundImage: "url('/bg-cosmic.jpg')",
+            opacity: 0.18 
+          }}
+        />
+
         {/* Organic animated grain overlay */}
         <div className="grain-overlay" />
         

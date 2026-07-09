@@ -89,11 +89,6 @@
   body {
     @apply bg-background text-foreground tracking-tight select-none relative;
     background-color: #050816;
-    background-image: url('/bg-cosmic.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
   }
 }
 
