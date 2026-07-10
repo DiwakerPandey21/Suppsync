@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Flame, MessageCircle, Send, Loader2 } from 'lucide-react'
+import { Flame, MessageCircle, Send, Loader2, Trophy, Sparkles, Plus, Award } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 type Activity = {
     id: string
@@ -78,11 +79,11 @@ export function InteractiveFeedItem({ activity, currentUserId }: { activity: Act
             activity_id: activity.id,
             user_id: currentUserId,
             comment_text: newComment
-        }).select('id, created_at').single()
+        }).select('id, created_at').maybeSingle()
 
         if (data) {
             // Get my username for optimistic update
-            const { data: profile } = await supabase.from('profiles').select('username').eq('id', currentUserId).single()
+            const { data: profile } = await supabase.from('profiles').select('username').eq('id', currentUserId).maybeSingle()
             setComments(prev => [...prev, {
                 id: data.id,
                 user_id: currentUserId,
@@ -95,11 +96,17 @@ export function InteractiveFeedItem({ activity, currentUserId }: { activity: Act
         setIsSubmitting(false)
     }
 
-    const getActivityText = (act: Activity) => {
-        if (act.type === 'badge_unlock') return `earned the "${act.payload?.badge}" badge! 🏆`
-        if (act.type === 'streak_milestone') return `hit a ${act.payload?.days}-day streak! 🔥`
-        if (act.type === 'protocol_adopt') return `adopted the "${act.payload?.protocol}" protocol`
-        return 'did something cool'
+    const getActivityTheme = () => {
+        if (activity.type === 'badge_unlock') return { glow: 'rgba(234,179,8,0.2)', border: 'border-yellow-500/20', line: 'bg-yellow-500', icon: Trophy, iconColor: 'text-yellow-400' }
+        if (activity.type === 'streak_milestone') return { glow: 'rgba(249,115,22,0.2)', border: 'border-orange-500/20', line: 'bg-orange-500', icon: Flame, iconColor: 'text-orange-400' }
+        return { glow: 'rgba(59,130,246,0.2)', border: 'border-blue-500/20', line: 'bg-blue-500', icon: Sparkles, iconColor: 'text-blue-400' }
+    }
+
+    const getActivityText = () => {
+        if (activity.type === 'badge_unlock') return `unlocked the "${activity.payload?.badge}" achievement!`
+        if (activity.type === 'streak_milestone') return `set a new personal milestone of ${activity.payload?.days}-days consecutive check-ins!`
+        if (activity.type === 'protocol_adopt') return `fully integrated the "${activity.payload?.protocol}" stack protocol!`
+        return 'logged custom health activity'
     }
 
     const timeAgo = (dateStr: string) => {
@@ -123,67 +130,123 @@ export function InteractiveFeedItem({ activity, currentUserId }: { activity: Act
         hundred: reactions.some(r => r.user_id === currentUserId && r.reaction_type === '100'),
     }
 
+    const theme = getActivityTheme()
+    const IconComponent = theme.icon
+
     return (
         <motion.div
-            className="p-4 bg-slate-900 border border-slate-800 rounded-2xl mb-3"
-            initial={{ opacity: 0, y: 10 }}
+            className={cn(
+                "p-5 rounded-3xl border bg-white/[0.01] hover:bg-white/[0.02] transition-all relative overflow-hidden",
+                theme.border
+            )}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 24 }}
         >
-            <div className="flex items-start space-x-3 mb-3">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-sm font-bold text-white flex-shrink-0">
+            {/* Color bar glow on the left */}
+            <div 
+                style={{ 
+                    boxShadow: `0 0 10px ${theme.glow}` 
+                }}
+                className={cn("absolute left-0 top-0 bottom-0 w-[3px]", theme.line)}
+            />
+
+            {/* Content header */}
+            <div className="flex items-start space-x-3.5 pl-2 mb-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-900 to-slate-950 border border-white/[0.08] flex items-center justify-center text-sm font-black text-white flex-shrink-0">
                     {activity.display_name?.charAt(0).toUpperCase() || '?'}
                 </div>
                 <div className="flex-1 min-w-0">
-                    <p className="text-sm text-white leading-snug">
-                        <span className="font-bold">{activity.display_name}</span>{' '}
-                        <span className="text-slate-400">{getActivityText(activity)}</span>
+                    <div className="flex items-center space-x-2">
+                        <span className="text-xs font-black text-white">{activity.display_name}</span>
+                        <div className={cn("p-1 rounded-lg bg-white/[0.03] border border-white/[0.06]", theme.iconColor)}>
+                            <IconComponent className="w-3.5 h-3.5" />
+                        </div>
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                        {getActivityText()}
                     </p>
-                    <p className="text-[10px] text-slate-600 mt-0.5">{timeAgo(activity.created_at)}</p>
+                    <p className="text-[9px] font-bold text-slate-600 uppercase tracking-wider mt-1">{timeAgo(activity.created_at)}</p>
                 </div>
             </div>
 
-            {/* Interaction Bar */}
-            <div className="flex items-center space-x-3 mt-2 pt-3 border-t border-slate-800/50">
-                <div className="flex items-center space-x-2">
-                    <button onClick={() => toggleReaction('fire')} className={`flex items-center space-x-1 px-2 py-1 rounded-lg text-xs transition-colors ${myReactions.fire ? 'bg-orange-500/20 text-orange-400' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>
-                        <span>🔥</span> {reactionCounts.fire > 0 && <span>{reactionCounts.fire}</span>}
+            {/* Interactive reaction & comment actions */}
+            <div className="flex items-center justify-between pt-3 pl-2 border-t border-white/[0.04]">
+                <div className="flex items-center space-x-1.5">
+                    <button 
+                        onClick={() => toggleReaction('fire')} 
+                        className={cn(
+                            "flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs transition-all active:scale-90",
+                            myReactions.fire 
+                                ? "bg-orange-500/10 border border-orange-500/25 text-orange-400" 
+                                : "bg-white/[0.02] border border-white/[0.05] text-slate-400 hover:text-white"
+                        )}
+                    >
+                        <span>🔥</span> 
+                        {reactionCounts.fire > 0 && <span className="font-bold text-[10px] ml-0.5">{reactionCounts.fire}</span>}
                     </button>
-                    <button onClick={() => toggleReaction('muscle')} className={`flex items-center space-x-1 px-2 py-1 rounded-lg text-xs transition-colors ${myReactions.muscle ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>
-                        <span>💪</span> {reactionCounts.muscle > 0 && <span>{reactionCounts.muscle}</span>}
+                    <button 
+                        onClick={() => toggleReaction('muscle')} 
+                        className={cn(
+                            "flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs transition-all active:scale-90",
+                            myReactions.muscle 
+                                ? "bg-amber-500/10 border border-amber-500/25 text-amber-400" 
+                                : "bg-white/[0.02] border border-white/[0.05] text-slate-400 hover:text-white"
+                        )}
+                    >
+                        <span>💪</span> 
+                        {reactionCounts.muscle > 0 && <span className="font-bold text-[10px] ml-0.5">{reactionCounts.muscle}</span>}
                     </button>
-                    <button onClick={() => toggleReaction('100')} className={`flex items-center space-x-1 px-2 py-1 rounded-lg text-xs transition-colors ${myReactions.hundred ? 'bg-red-500/20 text-red-400' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}>
-                        <span>💯</span> {reactionCounts.hundred > 0 && <span>{reactionCounts.hundred}</span>}
+                    <button 
+                        onClick={() => toggleReaction('100')} 
+                        className={cn(
+                            "flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs transition-all active:scale-90",
+                            myReactions.hundred 
+                                ? "bg-red-500/10 border border-red-500/25 text-red-400" 
+                                : "bg-white/[0.02] border border-white/[0.05] text-slate-400 hover:text-white"
+                        )}
+                    >
+                        <span>💯</span> 
+                        {reactionCounts.hundred > 0 && <span className="font-bold text-[10px] ml-0.5">{reactionCounts.hundred}</span>}
                     </button>
                 </div>
-
-                <div className="flex-1" />
 
                 <button 
                     onClick={() => setShowComments(!showComments)}
-                    className={`flex items-center space-x-1.5 px-3 py-1 rounded-lg text-xs transition-colors ${showComments ? 'bg-blue-600/20 text-blue-400' : 'text-slate-400 hover:bg-slate-800'}`}
+                    className={cn(
+                        "flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs transition-all active:scale-95",
+                        showComments 
+                            ? "bg-blue-600/10 border border-blue-500/25 text-blue-400" 
+                            : "text-slate-400 hover:text-white"
+                    )}
                 >
                     <MessageCircle className="w-3.5 h-3.5" />
-                    <span>{comments.length}</span>
+                    <span className="font-bold text-[10px]">{comments.length}</span>
                 </button>
             </div>
 
-            {/* Comments Section */}
+            {/* Collapsible comments section */}
             <AnimatePresence>
                 {showComments && (
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="mt-3 overflow-hidden"
+                        className="mt-3 overflow-hidden pl-2 border-t border-white/[0.04] pt-3"
+                        transition={{ type: 'spring', stiffness: 350, damping: 25 }}
                     >
-                        <div className="space-y-2 mb-3">
+                        <div className="space-y-2 mb-4 max-h-[160px] overflow-y-auto pr-1 scrollbar-none">
                             {comments.map(c => (
-                                <div key={c.id} className="bg-slate-800/50 rounded-lg p-2.5">
-                                    <p className="text-[11px] font-bold text-slate-300">{c.display_name}</p>
-                                    <p className="text-xs text-slate-400 mt-0.5">{c.comment_text}</p>
+                                <div key={c.id} className="bg-white/[0.02] border border-white/[0.04] rounded-2xl p-3">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[10px] font-black text-slate-300">{c.display_name}</span>
+                                    </div>
+                                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">{c.comment_text}</p>
                                 </div>
                             ))}
-                            {comments.length === 0 && <p className="text-[10px] text-slate-500 italic">No comments yet. Be the first!</p>}
+                            {comments.length === 0 && (
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider py-2">No comments yet. Share your thoughts!</p>
+                            )}
                         </div>
 
                         <div className="flex items-center space-x-2">
@@ -192,12 +255,12 @@ export function InteractiveFeedItem({ activity, currentUserId }: { activity: Act
                                 onChange={e => setNewComment(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && postComment()}
                                 placeholder="Add a comment..."
-                                className="flex-1 bg-slate-800 border-none rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                className="flex-1 bg-slate-950/40 border border-white/[0.08] rounded-2xl px-4 py-2.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500/50 transition-colors"
                             />
                             <button
                                 onClick={postComment}
                                 disabled={!newComment.trim() || isSubmitting}
-                                className="bg-blue-600 text-white p-2 rounded-lg disabled:opacity-50"
+                                className="bg-blue-600 hover:bg-blue-500 text-white p-2.5 rounded-2xl disabled:opacity-50 transition-colors active:scale-95"
                             >
                                 {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                             </button>
