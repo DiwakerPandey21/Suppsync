@@ -28,9 +28,8 @@ type Supplement = {
 type Schedule = {
     id: string
     supplement_id: string
-    timing_time: string
-    timing_display: string
-    quantity: string
+    time_of_day: string
+    dosage_unit: string
     dosage_amount: number
     is_active: boolean
     supplements: Supplement
@@ -150,9 +149,9 @@ export default function LibraryPage() {
         const snapshot = {
             supplements: activeSchedules.map(s => ({
                 name: s.supplements.name,
-                amount: `${s.dosage_amount} ${s.quantity}`,
+                amount: `${s.dosage_amount} ${s.dosage_unit}`,
                 frequency: 'Daily',
-                time: s.timing_display
+                time: s.time_of_day
             }))
         }
 
@@ -255,7 +254,7 @@ export default function LibraryPage() {
     const timelineSlots = useMemo(() => {
         const groups: { Morning: Schedule[], Afternoon: Schedule[], Evening: Schedule[], Night: Schedule[] } = { Morning: [], Afternoon: [], Evening: [], Night: [] }
         schedules.forEach(s => {
-            const timing = s.timing_display.toLowerCase()
+            const timing = (s.time_of_day || 'morning').toLowerCase()
             if (timing.includes('morning') || timing.includes('breakfast') || timing.includes('am')) {
                 groups.Morning.push(s)
             } else if (timing.includes('afternoon') || timing.includes('lunch') || timing.includes('noon')) {
@@ -490,7 +489,7 @@ export default function LibraryPage() {
                                                         {nextDose ? (
                                                             <div className="flex justify-between items-center text-[10px] text-slate-400 uppercase">
                                                                 <span>Next Schedule:</span>
-                                                                <span className="font-black text-white">{nextDose.timing_display} • {nextDose.quantity}</span>
+                                                                <span className="font-black text-white">{nextDose.time_of_day} • {nextDose.dosage_amount} {nextDose.dosage_unit}</span>
                                                             </div>
                                                         ) : (
                                                             <div className="flex justify-between items-center text-[10px] text-slate-500">
