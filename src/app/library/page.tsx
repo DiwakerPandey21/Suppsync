@@ -8,7 +8,7 @@ import {
     Plus, Trash, Eye, BookOpen, Heart, Brain, Zap, GitBranch, GitCommit, 
     Undo2, Coins, Download, AlertTriangle, TrendingUp, ShoppingCart, 
     Check, Calendar, Star, Info, MessageSquare, ArrowRight, Share2, Layers,
-    ChevronRight, X
+    ChevronRight, X, Loader2
 } from 'lucide-react'
 import { AddSupplementDialog } from '@/components/library/add-supplement-dialog'
 import { AddScheduleDialog } from '@/components/library/add-schedule-dialog'
@@ -253,7 +253,7 @@ export default function LibraryPage() {
 
     // Grouping schedules into Timeline slots (Morning, Afternoon, Evening, Night)
     const timelineSlots = useMemo(() => {
-        const groups = { Morning: [], Afternoon: [], Evening: [], Night: [] }
+        const groups: { Morning: Schedule[], Afternoon: Schedule[], Evening: Schedule[], Night: Schedule[] } = { Morning: [], Afternoon: [], Evening: [], Night: [] }
         schedules.forEach(s => {
             const timing = s.timing_display.toLowerCase()
             if (timing.includes('morning') || timing.includes('breakfast') || timing.includes('am')) {
