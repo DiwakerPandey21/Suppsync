@@ -1,15 +1,16 @@
 'use client'
 
 import { createClient } from '@/utils/supabase/client'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
     Pill, Trophy, Activity, Flame, ShieldAlert, Sparkles, Clock, Search, 
     Plus, Trash, Eye, BookOpen, Heart, Brain, Zap, GitBranch, GitCommit, 
     Undo2, Coins, Download, AlertTriangle, TrendingUp, ShoppingCart, 
     Check, Calendar, Star, Info, MessageSquare, ArrowRight, Share2, Layers,
-    ChevronRight, X, Loader2
+    ChevronRight, X, Loader2, Copy, Smartphone
 } from 'lucide-react'
+import html2canvas from 'html2canvas'
 import { AddSupplementDialog } from '@/components/library/add-supplement-dialog'
 import { AddScheduleDialog } from '@/components/library/add-schedule-dialog'
 import { cn } from '@/lib/utils'
@@ -66,6 +67,10 @@ export default function LibraryPage() {
     const [isLoading, setIsLoading] = useState(true)
 
     // Interactive States
+    const shareCardRef = useRef<HTMLDivElement>(null)
+    const [isExporting, setIsExporting] = useState(false)
+    const [copiedLink, setCopiedLink] = useState(false)
+    const [showShareModal, setShowShareModal] = useState(false)
     const [searchQuery, setSearchQuery] = useState('')
     const [activeGoal, setActiveGoal] = useState<'All' | 'Sleep' | 'Recovery' | 'Focus' | 'Stress' | 'Longevity'>('All')
     const [expandedCard, setExpandedCard] = useState<string | null>(null)
@@ -130,6 +135,35 @@ export default function LibraryPage() {
         
         await supabase.from('supplements').delete().eq('id', id)
         loadData()
+    }
+
+    // Download high-resolution PNG of the SuppSync Wrapped card using html2canvas
+    const handleDownloadPng = async () => {
+        if (!shareCardRef.current) return
+        setIsExporting(true)
+        try {
+            await new Promise(r => setTimeout(r, 200))
+            const canvas = await html2canvas(shareCardRef.current, {
+                scale: 3,
+                useCORS: true,
+                backgroundColor: null,
+            })
+            const dataUrl = canvas.toDataURL('image/png')
+            const link = document.createElement('a')
+            link.download = 'suppsync-wrapped.png'
+            link.href = dataUrl
+            link.click()
+        } catch (error) {
+            console.error('Failed to compile PNG:', error)
+        } finally {
+            setIsExporting(false)
+        }
+    }
+
+    const handleCopyLink = () => {
+        navigator.clipboard.writeText(window.location.href)
+        setCopiedLink(true)
+        setTimeout(() => setCopiedLink(false), 2000)
     }
 
     // Commit Stack Snapshot version
@@ -879,67 +913,168 @@ export default function LibraryPage() {
                     </div>
 
                     {/* SECTION 11: Premium Share Stack visual card generator */}
-                    <div className="bg-[#050816]/40 border border-white/[0.08] rounded-[24px] p-5 backdrop-blur-md shadow-xl space-y-4">
+                    <div className="bg-[#050816]/40 border border-white/[0.08] rounded-[24px] p-6 backdrop-blur-md shadow-xl space-y-5">
                         <div className="flex items-center space-x-2 pb-3 border-b border-white/[0.06] mb-1">
                             <Share2 className="w-4 h-4 text-purple-400" />
                             <h3 className="text-sm font-black text-white uppercase tracking-wider">Share Stack</h3>
                         </div>
 
-                        {/* Export Platform selector */}
-                        <div className="grid grid-cols-3 gap-1 bg-white/[0.02] p-1 rounded-xl border border-white/[0.05]">
-                            {(['instagram', 'twitter', 'linkedin'] as const).map(plat => (
-                                <button
-                                    key={plat}
-                                    onClick={() => setSharePlatform(plat)}
-                                    className={cn(
-                                        "py-1.5 rounded-lg text-[9px] font-black uppercase tracking-wider transition-colors",
-                                        sharePlatform === plat ? "bg-white text-black font-bold" : "text-slate-500"
-                                    )}
-                                >
-                                    {plat}
-                                </button>
-                            ))}
-                        </div>
+                        {/* Redesigned Premium SuppSync Wrapped Card */}
+                        <div 
+                            ref={shareCardRef}
+                            className="relative rounded-[28px] overflow-hidden aspect-[3/4] bg-gradient-to-br from-[#0B0C1E] via-[#02030A] to-[#120422] border border-white/[0.08] p-5 flex flex-col justify-between shadow-2xl"
+                        >
+                            {/* Glowing vector grids & meshes */}
+                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent pointer-events-none" />
+                            <div className="absolute bottom-0 right-0 w-36 h-36 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+                            
+                            {/* Giant stylized background watermark shield */}
+                            <div className="absolute inset-0 opacity-[0.02] pointer-events-none flex items-center justify-center">
+                                <svg className="w-48 h-48 text-white" viewBox="0 0 100 100" fill="currentColor">
+                                    <path d="M50 15 L85 32 L85 68 L50 85 L15 68 L15 32 Z" stroke="currentColor" strokeWidth="2" fill="none" />
+                                    <circle cx="50" cy="50" r="22" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                                    <path d="M50 20 L50 80 M20 50 L80 50" stroke="currentColor" strokeWidth="1.5" />
+                                </svg>
+                            </div>
 
-                        {/* Shared Card template display */}
-                        <div className="relative rounded-2xl overflow-hidden aspect-[9/16] bg-gradient-to-br from-indigo-950 via-slate-950 to-purple-950 border border-white/[0.08] p-4 flex flex-col justify-between shadow-2xl">
-                            {/* Glow bubble inside */}
-                            <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
-
-                            <div className="flex justify-between items-center relative z-10">
+                            <div className="flex justify-between items-start relative z-10">
                                 <div>
-                                    <p className="text-[7px] font-black tracking-widest text-slate-500 uppercase">SuppSync Wrapped</p>
-                                    <h5 className="text-[10px] font-black text-white leading-none mt-1">My Bio-Stack</h5>
+                                    <span className="text-[7px] font-black tracking-widest text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md uppercase">
+                                        SuppSync Wrapped
+                                    </span>
+                                    <h4 className="text-[11px] font-black text-white leading-none mt-2 uppercase tracking-wide">
+                                        @{profile?.username || 'biohacker'}
+                                    </h4>
                                 </div>
-                                <div className="bg-white/10 px-2 py-0.5 rounded text-[7px] font-black text-white uppercase">
+                                <div className="bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-0.5 rounded-full text-[8px] font-black text-emerald-400 uppercase tracking-widest">
                                     Score: {statsSummary.healthScore}%
                                 </div>
                             </div>
 
-                            <div className="space-y-1.5 relative z-10">
+                            {/* Active Supplements list display inside card */}
+                            <div className="space-y-1.5 relative z-10 my-4">
                                 {supplements.slice(0, 4).map((s, idx) => (
-                                    <div key={idx} className="flex items-center space-x-1.5 bg-white/5 border border-white/10 px-2 py-1 rounded-lg">
-                                        <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.color_hex }} />
-                                        <span className="text-[8px] font-black text-white truncate max-w-[100px]">{s.name}</span>
+                                    <div 
+                                        key={idx} 
+                                        className="flex items-center justify-between bg-white/[0.02] border border-white/[0.05] px-3 py-2 rounded-xl"
+                                    >
+                                        <div className="flex items-center space-x-2 truncate">
+                                            <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: s.color_hex || '#3b82f6' }} />
+                                            <span className="text-[9px] font-black text-slate-200 truncate max-w-[120px] uppercase tracking-wide">
+                                                {s.name}
+                                            </span>
+                                        </div>
+                                        <span className="text-[7px] font-black text-slate-500 uppercase tracking-wider">
+                                            {s.category || 'vital'}
+                                        </span>
                                     </div>
                                 ))}
+                                {supplements.length > 4 && (
+                                    <p className="text-[8px] font-bold text-slate-500 italic text-center">
+                                        + {supplements.length - 4} more active supplements
+                                    </p>
+                                )}
                             </div>
 
-                            <div className="flex justify-between items-center pt-2 border-t border-white/5 relative z-10">
-                                <span className="text-[6px] font-bold text-slate-500 uppercase tracking-widest">Powered by SuppSync</span>
-                                <div className="w-6 h-6 bg-white/10 rounded-lg flex items-center justify-center text-[8px] font-black text-white">
-                                    SS
+                            <div className="flex justify-between items-center pt-3.5 border-t border-white/[0.05] relative z-10">
+                                <div>
+                                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block">
+                                        🔥 {currentStreak} Day Streak
+                                    </span>
+                                    <span className="text-[6px] font-bold text-slate-600 uppercase tracking-wider block mt-0.5">
+                                        SuppSync Health OS
+                                    </span>
                                 </div>
+                                
+                                {/* Subtle QR Code brand stamp */}
+                                <svg className="w-6 h-6 text-white/40" viewBox="0 0 100 100" fill="currentColor">
+                                    <rect x="0" y="0" width="22" height="22" />
+                                    <rect x="0" y="78" width="22" height="22" />
+                                    <rect x="78" y="0" width="22" height="22" />
+                                    <rect x="35" y="35" width="30" height="30" />
+                                    <rect x="15" y="45" width="10" height="10" />
+                                    <rect x="78" y="78" width="22" height="22" />
+                                </svg>
                             </div>
                         </div>
 
-                        <button 
-                            onClick={() => alert('Premium share card template compiled successfully as PNG and downloaded!')}
-                            className="w-full bg-purple-600 hover:bg-purple-500 text-white font-black text-xs h-10 rounded-xl transition-colors flex items-center justify-center space-x-1.5 shadow-[0_0_12px_rgba(168,85,247,0.2)]"
-                        >
-                            <Download className="w-3.5 h-3.5" />
-                            <span>Export Template</span>
-                        </button>
+                        {/* Interactive share tools */}
+                        <div className="space-y-2.5">
+                            <div className="grid grid-cols-2 gap-2">
+                                <button 
+                                    onClick={handleDownloadPng}
+                                    disabled={isExporting}
+                                    className="bg-purple-600 hover:bg-purple-500 text-white font-black text-[10px] uppercase h-9 rounded-xl transition-all flex items-center justify-center space-x-1.5 shadow-[0_0_12px_rgba(168,85,247,0.2)]"
+                                >
+                                    {isExporting ? (
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    ) : (
+                                        <>
+                                            <Download className="w-3.5 h-3.5" />
+                                            <span>Download PNG</span>
+                                        </>
+                                    )}
+                                </button>
+
+                                <button 
+                                    onClick={() => setShowShareModal(!showShareModal)}
+                                    className="bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] text-white font-black text-[10px] uppercase h-9 rounded-xl transition-all flex items-center justify-center space-x-1.5"
+                                >
+                                    <Share2 className="w-3.5 h-3.5 text-purple-400" />
+                                    <span>Share Stack</span>
+                                </button>
+                            </div>
+
+                            {/* Floating platform popover/drawer */}
+                            <AnimatePresence>
+                                {showShareModal && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: 10 }}
+                                        className="bg-white/[0.02] border border-white/[0.06] p-3 rounded-2xl space-y-2 text-[10px]"
+                                    >
+                                        <p className="font-black text-[8px] text-slate-500 uppercase tracking-widest text-center mb-1">
+                                            Select Destination
+                                        </p>
+                                        <div className="grid grid-cols-4 gap-1.5 text-center">
+                                            <a 
+                                                href={`https://api.whatsapp.com/send?text=Check out my daily biohacking stack on SuppSync! Adherence score: ${statsSummary.healthScore}% - https://suppsync.vercel.app/`}
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="p-2 rounded-xl hover:bg-white/[0.04] transition-colors flex flex-col items-center justify-center text-slate-300 hover:text-emerald-400 uppercase font-black text-[8px]"
+                                            >
+                                                <MessageSquare className="w-3.5 h-3.5 mb-1" />
+                                                WhatsApp
+                                            </a>
+                                            <a 
+                                                href={`https://twitter.com/intent/tweet?text=Optimizing my daily biohacking stack on @SuppSync. Current Streaks: ${currentStreak} days! 🔥 https://suppsync.vercel.app/`}
+                                                target="_blank" 
+                                                rel="noopener noreferrer"
+                                                className="p-2 rounded-xl hover:bg-white/[0.04] transition-colors flex flex-col items-center justify-center text-slate-300 hover:text-cyan-400 uppercase font-black text-[8px]"
+                                            >
+                                                <Share2 className="w-3.5 h-3.5 mb-1" />
+                                                Twitter
+                                            </a>
+                                            <button 
+                                                onClick={handleCopyLink}
+                                                className="p-2 rounded-xl hover:bg-white/[0.04] transition-colors flex flex-col items-center justify-center text-slate-300 hover:text-purple-400 uppercase font-black text-[8px]"
+                                            >
+                                                {copiedLink ? <Check className="w-3.5 h-3.5 mb-1 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 mb-1" />}
+                                                {copiedLink ? 'Copied' : 'Copy Link'}
+                                            </button>
+                                            <button 
+                                                onClick={() => alert('Download PNG to upload directly to Instagram Stories!')}
+                                                className="p-2 rounded-xl hover:bg-white/[0.04] transition-colors flex flex-col items-center justify-center text-slate-300 hover:text-pink-400 uppercase font-black text-[8px]"
+                                            >
+                                                <Smartphone className="w-3.5 h-3.5 mb-1" />
+                                                Instagram
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
                     </div>
 
                 </div>
