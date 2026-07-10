@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
     Users, Search, Trophy, Pill, Flame, UserPlus, UserCheck, 
-    Loader2, Sparkles, Plus, X, Share2, Award, Zap, KeyRound, Clock
+    Loader2, Sparkles, Plus, X, Share2, Award, Zap, KeyRound
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -31,6 +31,12 @@ type SearchResult = {
     is_following: boolean
 }
 
+type PartnerProfile = {
+    id: string
+    display_name: string
+    current_streak: number
+}
+
 export default function SocialPage() {
     const supabase = createClient()
     const [activities, setActivities] = useState<Activity[]>([])
@@ -38,9 +44,13 @@ export default function SocialPage() {
     const [searchResults, setSearchResults] = useState<SearchResult[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [isSearching, setIsSearching] = useState(false)
+    
+    // Live Backend Profile States
     const [userId, setUserId] = useState<string | null>(null)
     const [userProfile, setUserProfile] = useState<{ xp: number; level: number } | null>(null)
+    const [myStreak, setMyStreak] = useState(0)
     const [activeChallengesCount, setActiveChallengesCount] = useState(0)
+    const [followedPartners, setFollowedPartners] = useState<PartnerProfile[]>([])
 
     // Filter chip state for unified feed
     const [feedFilter, setFeedFilter] = useState<'All' | 'Milestones' | 'Protocol Adopts' | 'Badge Unlocks'>('All')
@@ -64,7 +74,6 @@ export default function SocialPage() {
     // Refresh triggers to child components
     const [squadsRefreshKey, setSquadsRefreshKey] = useState(0)
     const [challengesRefreshKey, setChallengesRefreshKey] = useState(0)
-    const [leaderboardRefreshKey, setLeaderboardRefreshKey] = useState(0)
 
     useEffect(() => {
         loadFeed()
@@ -74,28 +83,56 @@ export default function SocialPage() {
     const loadUserProfile = async () => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
+        setUserId(user.id)
+
+        // Load own profile stats
         const { data: profile } = await supabase
             .from('profiles')
-            .select('xp, level')
+            .select('xp, level, current_streak')
             .eq('id', user.id)
             .maybeSingle()
+
         if (profile) {
             setUserProfile({ xp: profile.xp || 0, level: profile.level || 1 })
+            setMyStreak(profile.current_streak || 0)
         }
 
+        // Load active challenges count
         const { count } = await supabase
             .from('challenge_participants')
             .select('*', { count: 'exact', head: true })
             .eq('user_id', user.id)
         
         setActiveChallengesCount(count || 0)
+
+        // Load followed partners and their streaks from backend (follows table -> profiles table)
+        const { data: follows } = await supabase
+            .from('follows')
+            .select('following_id')
+            .eq('follower_id', user.id)
+
+        const followIds = follows?.map(f => f.following_id) || []
+
+        if (followIds.length > 0) {
+            const { data: followedProfiles } = await supabase
+                .from('profiles')
+                .select('id, display_name, current_streak')
+                .in('id', followIds)
+            
+            setFollowedPartners((followedProfiles || []).map(p => ({
+                id: p.id,
+                display_name: p.display_name || 'Partner',
+                current_streak: p.current_streak || 0
+            })))
+        } else {
+            setFollowedPartners([])
+        }
     }
 
     const loadFeed = async () => {
         setIsLoading(true)
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
-        setUserId(user.id)
 
         // Get users I follow
         const { data: following } = await supabase
@@ -178,8 +215,9 @@ export default function SocialPage() {
             r.id === targetId ? { ...r, is_following: !r.is_following } : r
         ))
         
-        // Refresh feed after follow/unfollow
+        // Refresh feed & partner list after change
         loadFeed()
+        loadUserProfile()
     }
 
     // Modal submit handlers
@@ -302,11 +340,16 @@ export default function SocialPage() {
         })
     }, [activities, feedFilter])
 
+    // Compute online count of followed partners (we consider them online if their streak > 0)
+    const onlineCount = useMemo(() => {
+        return followedPartners.filter(p => p.current_streak > 0).length
+    }, [followedPartners])
+
     return (
-        <div className="flex min-h-screen flex-col pt-8 pb-32 px-4 max-w-6xl mx-auto w-full relative">
+        <div className="flex min-h-screen flex-col pt-8 pb-32 px-6 max-w-6xl mx-auto w-full relative">
             
             {/* Dynamic Hero Section */}
-            <div className="relative rounded-[32px] border border-white/[0.08] bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent p-6 mb-8 overflow-hidden shadow-2xl">
+            <div className="relative rounded-[24px] border border-white/[0.08] bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent p-6 mb-8 overflow-hidden shadow-2xl">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute -bottom-12 left-12 w-48 h-48 bg-purple-500/5 rounded-full blur-2xl pointer-events-none" />
 
@@ -322,17 +365,17 @@ export default function SocialPage() {
 
                     {/* Streak & XP Stats */}
                     <div className="flex flex-wrap gap-4 items-center">
-                        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-3 flex items-center space-x-3">
+                        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-3.5 flex items-center space-x-3">
                             <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center border border-orange-500/25">
                                 <Flame className="w-5 h-5 text-orange-400" />
                             </div>
                             <div>
                                 <p className="text-[9px] text-slate-500 font-bold uppercase">Daily Streak</p>
-                                <p className="text-sm font-black text-white">4 Days</p>
+                                <p className="text-sm font-black text-white">{myStreak} Days</p>
                             </div>
                         </div>
 
-                        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-3 flex items-center space-x-3">
+                        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-3.5 flex items-center space-x-3">
                             <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/25">
                                 <Award className="w-5 h-5 text-yellow-400" />
                             </div>
@@ -342,7 +385,7 @@ export default function SocialPage() {
                             </div>
                         </div>
 
-                        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-3 flex items-center space-x-3">
+                        <div className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-3.5 flex items-center space-x-3">
                             <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/25">
                                 <Trophy className="w-5 h-5 text-blue-400" />
                             </div>
@@ -354,42 +397,56 @@ export default function SocialPage() {
                     </div>
                 </div>
 
-                {/* Online Friends status */}
-                <div className="flex items-center space-x-3.5 mt-6 pt-5 border-t border-white/[0.05] relative z-10">
+                {/* Real Live Followed Partners Streaks */}
+                <div className="flex items-center space-x-4 mt-6 pt-5 border-t border-white/[0.05] relative z-10">
                     <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Active Partner Streaks</span>
-                    <div className="flex -space-x-2">
-                        {['A', 'J', 'M', 'S'].map((char, index) => (
-                            <div 
-                                key={index} 
-                                className="w-7 h-7 rounded-full bg-slate-900 border border-white/[0.12] flex items-center justify-center text-[10px] font-black text-white relative shadow-md"
-                            >
-                                {char}
-                                <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-500 border border-slate-950" />
+                    
+                    {followedPartners.length > 0 ? (
+                        <div className="flex items-center space-x-3 overflow-x-auto scrollbar-none py-0.5">
+                            <div className="flex -space-x-2">
+                                {followedPartners.slice(0, 5).map((partner) => (
+                                    <div 
+                                        key={partner.id}
+                                        title={`${partner.display_name} • Streak: ${partner.current_streak}d`}
+                                        className="w-7 h-7 rounded-full bg-slate-900 border border-white/[0.12] flex items-center justify-center text-[10px] font-black text-white relative shadow-md uppercase"
+                                    >
+                                        {partner.display_name.charAt(0)}
+                                        {partner.current_streak > 0 && (
+                                            <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-500 border border-slate-950" />
+                                        )}
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">4 online</span>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                {onlineCount} active • {followedPartners.length} total partners
+                            </span>
+                        </div>
+                    ) : (
+                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider italic">
+                            No active partners yet
+                        </span>
+                    )}
                 </div>
             </div>
 
-            {/* Unified 12-Column Responsive Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+            {/* Standardized 12-Column Responsive Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 items-start">
                 
                 {/* Left Column (Leaderboard & User Search) - Span 3 */}
-                <div className="md:col-span-3 space-y-8 order-2 md:order-1">
+                <div className="lg:col-span-3 space-y-6 md:order-1">
                     {/* Podium Leaderboard */}
-                    <div className="bg-[#050816]/40 border border-white/[0.08] rounded-[32px] p-5 backdrop-blur-md shadow-xl">
-                        <Leaderboard key={leaderboardRefreshKey} />
+                    <div className="bg-[#050816]/40 border border-white/[0.08] rounded-[24px] p-5 backdrop-blur-md shadow-xl">
+                        <Leaderboard />
                     </div>
 
                     {/* Find Users / Discover */}
-                    <div className="bg-[#050816]/40 border border-white/[0.08] rounded-[32px] p-5 backdrop-blur-md shadow-xl space-y-4">
-                        <div className="flex items-center space-x-2 pb-2 border-b border-white/[0.05]">
+                    <div className="bg-[#050816]/40 border border-white/[0.08] rounded-[24px] p-5 backdrop-blur-md shadow-xl space-y-4">
+                        <div className="flex items-center space-x-2 pb-3 border-b border-white/[0.06] mb-1">
                             <Search className="w-4 h-4 text-slate-400" />
-                            <h3 className="text-base font-black text-white uppercase tracking-tight">Discover</h3>
+                            <h3 className="text-sm font-black text-white uppercase tracking-wider">Discover</h3>
                         </div>
 
-                        <div className="flex space-x-1.5">
+                        <div className="flex space-x-2">
                             <Input
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
@@ -444,8 +501,8 @@ export default function SocialPage() {
                     </div>
                 </div>
 
-                {/* Center Column (Activity Feed & FAB actions) - Span 6 */}
-                <div className="md:col-span-6 space-y-6 order-1 md:order-2">
+                {/* Center Column (Activity Feed) - Span 6 */}
+                <div className="lg:col-span-6 space-y-6 md:order-2">
                     
                     {/* Feed Filters */}
                     <div className="flex space-x-1.5 overflow-x-auto pb-1 scrollbar-none">
@@ -472,7 +529,7 @@ export default function SocialPage() {
                                 <Loader2 className="w-6 h-6 animate-spin text-slate-500" />
                             </div>
                         ) : filteredActivities.length === 0 ? (
-                            <div className="text-center py-16 border border-white/[0.04] bg-white/[0.01] rounded-[32px] p-6">
+                            <div className="text-center py-16 border border-white/[0.04] bg-white/[0.01] rounded-[24px] p-6">
                                 <Users className="w-12 h-12 text-slate-700 mx-auto mb-4" />
                                 <h4 className="text-sm font-black text-white uppercase tracking-wider">Feed is quiet</h4>
                                 <p className="text-xs text-slate-500 mt-1.5 max-w-sm mx-auto">Follow other biohackers to view their daily logs and achievements, or launch a new squad to kickstart activity!</p>
@@ -486,14 +543,14 @@ export default function SocialPage() {
                 </div>
 
                 {/* Right Column (Squads & Challenges) - Span 3 */}
-                <div className="md:col-span-3 space-y-8 order-3">
+                <div className="md:col-span-2 lg:col-span-3 space-y-6 md:order-3">
                     {/* Squads Component */}
-                    <div className="bg-[#050816]/40 border border-white/[0.08] rounded-[32px] p-5 backdrop-blur-md shadow-xl">
+                    <div className="bg-[#050816]/40 border border-white/[0.08] rounded-[24px] p-5 backdrop-blur-md shadow-xl">
                         <SquadsTab key={squadsRefreshKey} />
                     </div>
 
                     {/* Challenges Marketplace */}
-                    <div className="bg-[#050816]/40 border border-white/[0.08] rounded-[32px] p-5 backdrop-blur-md shadow-xl">
+                    <div className="bg-[#050816]/40 border border-white/[0.08] rounded-[24px] p-5 backdrop-blur-md shadow-xl">
                         <CommunityChallenges key={challengesRefreshKey} />
                     </div>
                 </div>
@@ -515,7 +572,7 @@ export default function SocialPage() {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="fixed inset-x-4 top-[20%] md:inset-auto md:top-[30%] md:left-1/2 md:-translate-x-1/2 bg-[#050816]/95 border border-white/[0.08] rounded-[32px] p-6 z-50 max-w-md w-full shadow-2xl pointer-events-auto mx-auto"
+                            className="fixed inset-x-4 top-[20%] md:inset-auto md:top-[30%] md:left-1/2 md:-translate-x-1/2 bg-[#050816]/95 border border-white/[0.08] rounded-[24px] p-6 z-50 max-w-md w-full shadow-2xl pointer-events-auto mx-auto"
                         >
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-base font-black text-white uppercase tracking-tight">
