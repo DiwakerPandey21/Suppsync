@@ -10,7 +10,7 @@ import {
     Check, Calendar, Star, Info, MessageSquare, ArrowRight, Share2, Layers,
     ChevronRight, X, Loader2, Copy, Smartphone
 } from 'lucide-react'
-import html2canvas from 'html2canvas'
+import html2canvas from 'html2canvas-pro'
 import { AddSupplementDialog } from '@/components/library/add-supplement-dialog'
 import { AddScheduleDialog } from '@/components/library/add-schedule-dialog'
 import { cn } from '@/lib/utils'
@@ -922,20 +922,9 @@ export default function LibraryPage() {
                         {/* Redesigned Premium SuppSync Wrapped Card */}
                         <div 
                             ref={shareCardRef}
-                            className="relative rounded-[28px] overflow-hidden aspect-[3/4] bg-gradient-to-br from-[#0B0C1E] via-[#02030A] to-[#120422] border border-white/[0.08] p-5 flex flex-col justify-between shadow-2xl"
+                            className="relative rounded-[28px] overflow-hidden aspect-[3/4] border border-white/[0.08] p-5 flex flex-col justify-between shadow-2xl bg-cover bg-center"
+                            style={{ backgroundImage: "url('/share-card-bg.png')" }}
                         >
-                            {/* Glowing vector grids & meshes */}
-                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent pointer-events-none" />
-                            <div className="absolute bottom-0 right-0 w-36 h-36 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-                            
-                            {/* Giant stylized background watermark shield */}
-                            <div className="absolute inset-0 opacity-[0.02] pointer-events-none flex items-center justify-center">
-                                <svg className="w-48 h-48 text-white" viewBox="0 0 100 100" fill="currentColor">
-                                    <path d="M50 15 L85 32 L85 68 L50 85 L15 68 L15 32 Z" stroke="currentColor" strokeWidth="2" fill="none" />
-                                    <circle cx="50" cy="50" r="22" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                                    <path d="M50 20 L50 80 M20 50 L80 50" stroke="currentColor" strokeWidth="1.5" />
-                                </svg>
-                            </div>
 
                             <div className="flex justify-between items-start relative z-10">
                                 <div>
