@@ -563,7 +563,7 @@ export default function LibraryPage() {
                                                     >
                                                         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: s.supplements.color_hex }} />
                                                         <span>{s.supplements.name}</span>
-                                                        <span className="text-[9px] text-slate-500">({s.dosage_amount} {s.quantity})</span>
+                                                        <span className="text-[9px] text-slate-500">({s.dosage_amount} {s.dosage_unit})</span>
                                                     </div>
                                                 ))}
                                             </div>
