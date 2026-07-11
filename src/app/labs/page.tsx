@@ -543,13 +543,13 @@ export default function LabsPage() {
                                     const currentRange = timeRanges[name] || 'ALL'
 
                                     // Calculate diff if history exists
-                                    const differenceMetrics = useMemo(() => {
+                                    const differenceMetrics = (() => {
                                         if (history.length < 2) return null
                                         const prev = history[1].value
                                         const diff = latest.value - prev
                                         const percent = Math.round((diff / prev) * 100)
                                         return { diff, percent }
-                                    }, [history, latest])
+                                    })()
 
                                     return (
                                         <div 
