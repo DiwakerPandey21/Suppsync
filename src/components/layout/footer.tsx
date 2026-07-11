@@ -6,274 +6,253 @@ import { createClient } from '@/utils/supabase/client'
 import { 
     Sparkles, ExternalLink, ShieldCheck, Heart, Terminal, 
     Database, Server, Cpu, Activity, MessageSquare, Info, 
-    ArrowRight, Github, Send, AlertTriangle, CpuIcon 
+    ArrowRight, Github, Send, AlertTriangle, CpuIcon, Check, Copy, HelpCircle, Bug, Lightbulb, Handshake
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function Footer() {
     const supabase = createClient()
     
-    // Live Supabase metrics state
-    const [metrics, setMetrics] = useState<{ supplements: number, biohackers: number, biomarkers: number } | null>(null)
-
-    useEffect(() => {
-        const fetchMetrics = async () => {
-            try {
-                const [suppRes, biohackerRes, biomarkerRes] = await Promise.all([
-                    supabase.from('supplements').select('*', { count: 'exact', head: true }),
-                    supabase.from('profiles').select('*', { count: 'exact', head: true }),
-                    supabase.from('biomarkers').select('*', { count: 'exact', head: true })
-                ])
-                
-                // Only set metrics if we actually receive real counts greater than 0
-                if (suppRes.count || biohackerRes.count || biomarkerRes.count) {
-                    setMetrics({
-                        supplements: suppRes.count || 0,
-                        biohackers: biohackerRes.count || 0,
-                        biomarkers: biomarkerRes.count || 0
-                    })
-                }
-            } catch (e) {
-                console.warn("Failed to fetch live database metrics:", e)
-            }
-        }
-        fetchMetrics()
-    }, [])
-
-    // Rotating daily taglines (Section 1)
+    // Rotating taglines
     const taglines = [
         "Take control of your biology.",
         "Built for healthier humans.",
         "Science meets AI.",
         "Optimize every protocol."
     ]
-    const activeTagline = useMemo(() => {
-        const idx = new Date().getDate() % taglines.length
-        return taglines[idx]
-    }, [])
 
-    // Daily health tips (Section 7)
+    // Daily health tips
     const tips = [
         "Vitamin D absorption increases when taken with dietary fat.",
-        "L-Theanine complements caffeine by smoothing stimulation and reducing jitters.",
-        "Fasting 12 hours before a blood draw stabilizes lipid metrics for accurate readings.",
-        "Magnesium Glycinate before bed supports sleep quality by acting as a gentle GABA agonist.",
+        "L-Theanine complements caffeine by smoothing stimulation.",
+        "Fasting 12 hours before a blood draw stabilizes lipid metrics.",
+        "Magnesium Glycinate before bed supports sleep quality by acting as a GABA agonist.",
         "Coenzyme Q10 morning dosing supports cellular ATP energy production."
     ]
-    const activeTip = useMemo(() => {
-        const idx = new Date().getDate() % tips.length
-        return tips[idx]
+
+    // Hydration-safe state variables
+    const [activeTagline, setActiveTagline] = useState(taglines[0])
+    const [activeTip, setActiveTip] = useState(tips[0])
+    const [mounted, setMounted] = useState(false)
+    const [copied, setCopied] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+        const dateIdx = new Date().getDate()
+        setActiveTagline(taglines[dateIdx % taglines.length])
+        setActiveTip(tips[dateIdx % tips.length])
     }, [])
 
+    const handleCopyEmail = () => {
+        navigator.clipboard.writeText('support@suppsync.com')
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+    }
+
     return (
-        <footer className="w-full mt-24 border-t border-white/[0.06] bg-[#020207] relative overflow-hidden select-none">
-            {/* Soft background glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
-
-            <div className="max-w-6xl mx-auto px-4 md:px-8 py-16 space-y-16 relative z-10">
+        <footer className="w-full mt-16 bg-gradient-to-t from-[#020207] via-[#05050C] to-transparent relative pt-16 pb-12 overflow-hidden select-none">
+            {/* Immersive top aurora boundary */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[1px] bg-gradient-to-r from-transparent via-indigo-500/25 to-transparent pointer-events-none" />
+            
+            <div className="max-w-5xl mx-auto px-6 md:px-8 space-y-12 relative z-10 text-slate-300">
                 
-                {/* SECTION 1: Closing Hero */}
-                <div className="relative rounded-[32px] border border-white/[0.08] bg-gradient-to-br from-[#0A0B1A] via-[#02030A] to-[#120420] p-8 md:p-12 overflow-hidden shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent pointer-events-none" />
-                    
-                    <div className="space-y-3 max-w-xl text-center md:text-left">
-                        <span className="text-[8px] font-black text-indigo-400 uppercase tracking-widest bg-indigo-500/10 px-3 py-1 rounded-full w-fit mx-auto md:mx-0">
-                            Protocol Sync Active
-                        </span>
-                        <h2 className="text-3xl md:text-4xl font-black text-white tracking-tight uppercase">
-                            {activeTagline}
-                        </h2>
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">
-                            Empowered by evidence-based medicine and Gemini neural intelligence.
-                        </p>
+                {/* CHAPTER 1: Closing Tagline Hero (Breaking the grid: staggered editorial layout) */}
+                <div className="space-y-6 pt-4">
+                    <div className="flex items-center space-x-2 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full w-fit">
+                        <Sparkles className="w-3 h-3 text-blue-400" />
+                        <span className="text-[7px] font-black text-blue-400 uppercase tracking-widest">Diagnostic Node</span>
                     </div>
 
-                    <a 
-                        href="/chat"
-                        className="bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase px-6 py-4 rounded-2xl transition-all duration-300 flex items-center space-x-2 shrink-0 shadow-lg shadow-blue-600/20 active:scale-95 cursor-pointer"
-                    >
-                        <span>Open AI Coach</span>
-                        <ArrowRight className="w-4 h-4" />
-                    </a>
-                </div>
-
-                {/* Main Link Categories Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
-                    
-                    {/* SECTION 2: About SuppSync */}
-                    <div className="lg:col-span-2 space-y-4">
-                        <div className="flex items-center space-x-2">
-                            <Activity className="w-5 h-5 text-blue-400" />
-                            <span className="font-black text-base tracking-widest text-white uppercase">SuppSync</span>
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                        <div className="space-y-2">
+                            <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest block">SuppSync OS</span>
+                            <h2 className="text-4xl md:text-5xl font-black text-white leading-none uppercase tracking-tight max-w-2xl">
+                                {mounted ? activeTagline : taglines[0]}
+                            </h2>
                         </div>
-                        <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
-                            SuppSync is an AI-powered Health Operating System helping users optimize supplements, biomarkers, genetics, recovery and longevity through evidence-based insights.
-                        </p>
-                    </div>
 
-                    {/* SECTION 3: Platform Links */}
-                    <div className="space-y-4">
-                        <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Platform</h4>
-                        <ul className="space-y-2.5 text-xs font-semibold text-slate-400">
-                            <li><a href="/dashboard" className="hover:text-white transition-colors">Dashboard</a></li>
-                            <li><a href="/library" className="hover:text-white transition-colors">Library</a></li>
-                            <li><a href="/labs" className="hover:text-white transition-colors">Labs</a></li>
-                            <li><a href="/social" className="hover:text-white transition-colors">Social Hub</a></li>
-                            <li><a href="/profile" className="hover:text-white transition-colors">Bio-Profile</a></li>
-                            <li><a href="/insights" className="hover:text-white transition-colors">Insights</a></li>
-                        </ul>
+                        <a 
+                            href="/chat"
+                            className="w-fit bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase h-10 px-5 rounded-xl transition-all duration-300 flex items-center space-x-2 shrink-0 shadow-lg shadow-blue-600/20 cursor-pointer active:scale-95"
+                        >
+                            <span>Consult AI Coach</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                        </a>
                     </div>
-
-                    {/* SECTION 4: Community Links */}
-                    <div className="space-y-4">
-                        <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Community</h4>
-                        <ul className="space-y-2.5 text-xs font-semibold text-slate-400">
-                            <li>
-                                <a href="https://discord.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors flex items-center space-x-1.5">
-                                    <span>Discord</span>
-                                    <ExternalLink className="w-3 h-3 text-slate-600" />
-                                </a>
-                            </li>
-                            <li>
-                                <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors flex items-center space-x-1.5">
-                                    <span>GitHub</span>
-                                    <ExternalLink className="w-3 h-3 text-slate-600" />
-                                </a>
-                            </li>
-                            <li>
-                                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors flex items-center space-x-1.5">
-                                    <span>Twitter / X</span>
-                                    <ExternalLink className="w-3 h-3 text-slate-600" />
-                                </a>
-                            </li>
-                            <li>
-                                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors flex items-center space-x-1.5">
-                                    <span>Instagram</span>
-                                    <ExternalLink className="w-3 h-3 text-slate-600" />
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-
-                    {/* SECTION 6: Legal Links */}
-                    <div className="space-y-4">
-                        <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Legal</h4>
-                        <ul className="space-y-2.5 text-xs font-semibold text-slate-400">
-                            <li><a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a></li>
-                            <li><a href="/terms" className="hover:text-white transition-colors">Terms of Service</a></li>
-                            <li><a href="/cookies" className="hover:text-white transition-colors">Cookie Policy</a></li>
-                            <li><a href="/disclaimer" className="hover:text-white transition-colors">Medical Disclaimer</a></li>
-                            <li><a href="/security" className="hover:text-white transition-colors">Data Security</a></li>
-                        </ul>
-                    </div>
-
                 </div>
 
-                {/* SECTION 5: Support Cards (Glass cards layout) */}
-                <div className="space-y-4">
-                    <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Support & Partnerships</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                {/* CHAPTER 2: About / Mission statement */}
+                <div className="max-w-xl text-xs text-slate-400 leading-relaxed pt-2 border-t border-white/[0.04]">
+                    <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-1">Our Mission</span>
+                    SuppSync is an AI-powered Health Operating System helping users optimize supplements, biomarkers, genetics, recovery and longevity through evidence-based insights.
+                </div>
+
+                {/* CHAPTER 3: Platform Links (Staggered pills instead of lists) */}
+                <div className="space-y-3.5">
+                    <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block ml-1">Platform Index</span>
+                    <div className="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-wider">
                         {[
-                            { name: 'Help Center', href: '/help' },
-                            { name: 'Contact Support', href: '/support' },
-                            { name: 'Feature Requests', href: '/features' },
-                            { name: 'Bug Reports', href: '/bugs' },
-                            { name: 'Feedback', href: '/feedback' },
-                            { name: 'FAQ', href: '/faq' },
-                            { name: 'Partnerships', href: '/partners' }
+                            { name: 'Dashboard', href: '/dashboard' },
+                            { name: 'Library', href: '/library' },
+                            { name: 'Labs', href: '/labs' },
+                            { name: 'Social Hub', href: '/social' },
+                            { name: 'Profile', href: '/profile' },
+                            { name: 'Insights', href: '/insights' },
+                            { name: 'Roadmap', href: '/roadmap' },
+                            { name: 'Documentation', href: '/docs' },
+                            { name: 'API Reference', href: '/api' }
                         ].map(item => (
                             <a 
                                 key={item.name}
                                 href={item.href}
-                                className="p-3 bg-white/[0.01] border border-white/[0.04] rounded-xl text-center text-[10px] font-black uppercase text-slate-400 hover:text-white hover:border-slate-800 hover:bg-white/[0.02] transition-all duration-300"
+                                className="px-3.5 py-1.5 bg-white/[0.01] border border-white/[0.06] hover:border-slate-800 hover:bg-white/[0.03] text-slate-300 hover:text-white rounded-full transition-all duration-300 flex items-center space-x-1.5 shadow-sm active:scale-95"
                             >
-                                {item.name}
+                                <span className="w-1 h-1 rounded-full bg-blue-500/60" />
+                                <span>{item.name}</span>
                             </a>
                         ))}
                     </div>
                 </div>
 
-                {/* Split segment: AI Tip, Live Metrics, System Status */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-8 border-t border-white/[0.04]">
+                {/* CHAPTER 4: Community (Live-feel profile chips) */}
+                <div className="space-y-3">
+                    <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block ml-1">Community Hubs</span>
+                    <div className="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-wider">
+                        <a 
+                            href="https://discord.com" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-indigo-500/5 hover:bg-indigo-500/10 border border-indigo-500/15 rounded-xl flex items-center space-x-2 text-indigo-300 transition-all duration-300"
+                        >
+                            <span>💬 Discord</span>
+                            <span className="text-[8px] font-bold text-indigo-400 bg-indigo-500/15 px-2 py-0.5 rounded">12K Active</span>
+                        </a>
+                        <a 
+                            href="https://github.com" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.06] rounded-xl flex items-center space-x-2 text-slate-300 transition-all duration-300"
+                        >
+                            <Github className="w-3.5 h-3.5" />
+                            <span>GitHub</span>
+                            <span className="text-[8px] font-bold text-slate-500 bg-white/[0.05] px-2 py-0.5 rounded">Open Source</span>
+                        </a>
+                        <a 
+                            href="https://twitter.com" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-cyan-500/5 hover:bg-cyan-500/10 border border-cyan-500/15 rounded-xl flex items-center space-x-2 text-cyan-300 transition-all duration-300"
+                        >
+                            <span>Twitter / X</span>
+                            <span className="text-[8px] font-bold text-cyan-400 bg-cyan-500/15 px-2 py-0.5 rounded">Daily Tips</span>
+                        </a>
+                    </div>
+                </div>
+
+                {/* CHAPTER 5: SupportRounded Action Cards (TAC hover lifts) */}
+                <div className="space-y-3.5">
+                    <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block ml-1">Support Actions</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        <button 
+                            onClick={handleCopyEmail}
+                            className="p-3 bg-white/[0.01] border border-white/[0.04] hover:bg-white/[0.03] hover:border-slate-800 rounded-xl text-left flex justify-between items-center group transition-all duration-300 active:scale-98"
+                        >
+                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 group-hover:text-white transition-colors">
+                                {copied ? 'Copied support' : '💬 Contact support'}
+                            </span>
+                            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <ArrowRight className="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-300 transition-colors" />}
+                        </button>
+                        
+                        <a 
+                            href="/bugs"
+                            className="p-3 bg-white/[0.01] border border-white/[0.04] hover:bg-white/[0.03] hover:border-slate-800 rounded-xl text-left flex justify-between items-center group transition-all duration-300 active:scale-98"
+                        >
+                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 group-hover:text-white transition-colors">
+                                🐛 Report Bug
+                            </span>
+                            <Bug className="w-3.5 h-3.5 text-slate-600 group-hover:text-red-400 transition-colors" />
+                        </a>
+
+                        <a 
+                            href="/features"
+                            className="p-3 bg-white/[0.01] border border-white/[0.04] hover:bg-white/[0.03] hover:border-slate-800 rounded-xl text-left flex justify-between items-center group transition-all duration-300 active:scale-98"
+                        >
+                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 group-hover:text-white transition-colors">
+                                💡 Request Feature
+                            </span>
+                            <Lightbulb className="w-3.5 h-3.5 text-slate-600 group-hover:text-yellow-400 transition-colors" />
+                        </a>
+
+                        <a 
+                            href="/partners"
+                            className="p-3 bg-white/[0.01] border border-white/[0.04] hover:bg-white/[0.03] hover:border-slate-800 rounded-xl text-left flex justify-between items-center group transition-all duration-300 active:scale-98"
+                        >
+                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 group-hover:text-white transition-colors">
+                                🤝 Partnerships
+                            </span>
+                            <Handshake className="w-3.5 h-3.5 text-slate-600 group-hover:text-blue-400 transition-colors" />
+                        </a>
+                    </div>
+                </div>
+
+                {/* CHAPTER 6: AI Tip & Status row (Connected, minimal) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-white/[0.04]">
                     
-                    {/* SECTION 7: Daily AI Health Insight */}
-                    <div className="bg-white/[0.01] border border-white/[0.04] p-5 rounded-2xl space-y-2">
-                        <div className="flex items-center space-x-1.5">
-                            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                            <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest">Daily Bio-Tip</span>
+                    {/* Minimal AI Tip */}
+                    <div className="flex items-start space-x-3 text-xs leading-normal">
+                        <Lightbulb className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />
+                        <div>
+                            <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-0.5">Today's AI Insight</span>
+                            <p className="text-slate-300 font-medium italic">
+                                "{mounted ? activeTip : tips[0]}"
+                            </p>
                         </div>
-                        <p className="text-[11px] font-bold text-slate-300 leading-relaxed italic">
-                            "{activeTip}"
-                        </p>
                     </div>
 
-                    {/* SECTION 8: Live Platform Metrics */}
-                    {metrics ? (
-                        <div className="bg-white/[0.01] border border-white/[0.04] p-5 rounded-2xl flex justify-between items-center">
-                            <div>
-                                <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest block">Live Platform Status</span>
-                                <span className="text-xl font-black text-white leading-none mt-1.5 block">Synced Nodes</span>
-                            </div>
-                            <div className="text-right space-y-1 text-[10px] font-semibold text-slate-400">
-                                <div>Active Biohackers: <strong className="text-white">{metrics.biohackers}</strong></div>
-                                <div>Supplements Logged: <strong className="text-white">{metrics.supplements}</strong></div>
-                                <div>Biomarkers Tracked: <strong className="text-white">{metrics.biomarkers}</strong></div>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="bg-white/[0.01] border border-white/[0.04] p-5 rounded-2xl flex items-center space-x-3">
-                            <ShieldCheck className="w-6 h-6 text-emerald-400 shrink-0" />
-                            <div>
-                                <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest block">Security synched</span>
-                                <p className="text-[10px] font-bold text-slate-400 leading-tight">All medical records are encrypted end-to-end.</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* SECTION 9: System Status */}
-                    <div className="bg-white/[0.01] border border-white/[0.04] p-5 rounded-2xl space-y-3">
-                        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">System Diagnostics</span>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[9px] font-bold uppercase text-slate-400">
-                            <div className="flex items-center justify-between">
-                                <span>AI Coach</span>
-                                <span className="text-emerald-400 font-black flex items-center space-x-1">
-                                    <span className="w-1 h-1 bg-emerald-500 rounded-full animate-ping mr-1" />
-                                    ONLINE
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span>Supabase</span>
-                                <span className="text-emerald-400 font-black">CONNECTED</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span>Genomics</span>
-                                <span className="text-indigo-400 font-black">READY</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span>Version</span>
-                                <span className="text-slate-500 font-mono">v1.2.6</span>
-                            </div>
+                    {/* Floating Status pills */}
+                    <div className="space-y-2">
+                        <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block ml-0.5">Diagnostic state</span>
+                        <div className="flex flex-wrap gap-1.5 text-[8px] font-black uppercase tracking-widest text-slate-400">
+                            <span className="bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full text-emerald-400 flex items-center space-x-1">
+                                <span className="w-1 h-1 bg-emerald-500 rounded-full animate-ping mr-1" />
+                                AI Coach Online
+                            </span>
+                            <span className="bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full text-emerald-400 flex items-center">
+                                Database Synced
+                            </span>
+                            <span className="bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-1 rounded-full text-indigo-400 flex items-center">
+                                Knowledge Updated
+                            </span>
+                            <span className="bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded-full text-blue-400 flex items-center">
+                                Secure Cloud
+                            </span>
                         </div>
                     </div>
 
                 </div>
 
-                {/* Bottom branding and copyright */}
+                {/* CHAPTER 7: Legal, Watermark & Copyright */}
                 <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-8 border-t border-white/[0.04] relative">
                     
-                    {/* SECTION 10: Branding watermark */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none">
-                        <span className="text-8xl font-black uppercase tracking-[24px] text-white">SUPPSYNC</span>
+                    {/* Non-distracting watermark */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none select-none">
+                        <span className="text-7xl font-black uppercase tracking-[20px] text-white">SUPPSYNC</span>
                     </div>
 
-                    {/* SECTION 11: Copyright */}
-                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest relative z-10">
-                        © 2026 SUPPSYNC. Your AI Health Operating System.
-                    </span>
+                    <div className="flex items-center space-x-4 text-[9px] font-black uppercase tracking-wider text-slate-500 relative z-10">
+                        <a href="/privacy" className="hover:text-white transition-colors">Privacy</a>
+                        <span>•</span>
+                        <a href="/terms" className="hover:text-white transition-colors">Terms</a>
+                        <span>•</span>
+                        <a href="/disclaimer" className="hover:text-white transition-colors">Disclaimer</a>
+                        <span>•</span>
+                        <span className="font-mono">v1.2.6</span>
+                    </div>
 
-                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider relative z-10">
-                        Made with ❤️ for healthier humans.
-                    </span>
+                    <div className="text-right text-[9px] font-black uppercase tracking-wider text-slate-500 relative z-10 flex flex-col md:items-end">
+                        <span>© 2026 SUPPSYNC</span>
+                        <span className="text-[8px] font-bold text-slate-600 block mt-0.5">Your AI Health Operating System</span>
+                    </div>
 
                 </div>
 
