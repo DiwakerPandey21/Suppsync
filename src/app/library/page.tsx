@@ -246,11 +246,13 @@ export default function LibraryPage() {
         if (!presetText) setChatInput('')
         setIsThinking(true)
 
-        // Map chat logs to SyncBot API message structure
-        const prevMessages = chatMessages.map(m => ({
-            role: m.sender === 'user' ? 'user' : 'assistant',
-            content: m.text
-        }))
+        // Map chat logs to SyncBot API message structure, filtering out the welcome message
+        const prevMessages = chatMessages
+            .filter((m, idx) => !(idx === 0 && m.sender === 'ai'))
+            .map(m => ({
+                role: m.sender === 'user' ? 'user' : 'assistant',
+                content: m.text
+            }))
 
         const payload = {
             messages: [...prevMessages, { role: 'user', content: text }],
