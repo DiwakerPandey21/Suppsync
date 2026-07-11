@@ -141,7 +141,23 @@ export default function LibraryPage() {
     const handleDownloadPng = async () => {
         if (!shareCardRef.current) return
         setIsExporting(true)
+
+        // Temporarily patch oklch and oklab stylesheet rules to prevent html2canvas crash
+        const styleElements = Array.from(document.querySelectorAll('style'));
+        const originalStyles = styleElements.map(el => ({
+            el,
+            text: el.textContent
+        }));
+
         try {
+            styleElements.forEach(el => {
+                if (el.textContent && (el.textContent.includes('oklch') || el.textContent.includes('oklab'))) {
+                    el.textContent = el.textContent
+                        .replace(/oklch\([^)]+\)/g, 'rgba(255,255,255,0.1)')
+                        .replace(/oklab\([^)]+\)/g, 'rgba(255,255,255,0.1)');
+                }
+            });
+
             await new Promise(r => setTimeout(r, 200))
             const canvas = await html2canvas(shareCardRef.current, {
                 scale: 3,
@@ -156,6 +172,10 @@ export default function LibraryPage() {
         } catch (error) {
             console.error('Failed to compile PNG:', error)
         } finally {
+            // Restore original styles immediately
+            originalStyles.forEach(({ el, text }) => {
+                el.textContent = text;
+            });
             setIsExporting(false)
         }
     }
