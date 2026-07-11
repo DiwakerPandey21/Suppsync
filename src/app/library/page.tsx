@@ -241,33 +241,62 @@ export default function LibraryPage() {
         const text = presetText || chatInput
         if (!text.trim() || isThinking) return
 
-        setChatMessages(prev => [...prev, { sender: 'user', text }])
+        const userMsg = { sender: 'user' as const, text }
+        setChatMessages(prev => [...prev, userMsg])
         if (!presetText) setChatInput('')
         setIsThinking(true)
 
-        // Mocking premium coach responses directly based on actual supplement data
-        setTimeout(() => {
-            let reply = "I've analyzed your biohacking stack. "
-            const query = text.toLowerCase()
-            
-            if (query.includes('sleep')) {
-                reply += "To optimize your sleep score, ensure Magnesium Threonate or Glycinate is taken 45 minutes before sleep. Refrain from taking Vitamin D or B-Complex after 3:00 PM as they interfere with melatonin production."
-            } else if (query.includes('anxiety') || query.includes('stress')) {
-                reply += "For cortisol regulation and stress defense, L-Theanine pairs exceptionally well with caffeine in a 2:1 ratio. Additionally, Ashwagandha shows high scientific evidence for reducing subjective stress scores when taken daily."
-            } else if (query.includes('muscle') || query.includes('testosterone')) {
-                reply += "To maximize protein synthesis, continue taking Whey Protein post-workout. Ensure Vitamin D3 levels are maintained around 5000 IU daily, as it serves as a key hormonal precursor supporting testosterone levels."
-            } else if (query.includes('focus')) {
-                reply += "Your focus levels can be enhanced by consolidating your morning protocol. Coenzyme Q10 combined with B-vitamins in the morning supports cellular energy, while L-Theanine prevents caffeine jitters."
-            } else if (query.includes('budget')) {
-                const totalCost = inventory.reduce((acc, item) => acc + (item.total_capacity > 0 ? 15 : 0), 0) // simulated price
-                reply += `Your current estimated monthly stack expenditure is $${totalCost}. To optimize, consider consolidating multi-ingredient vitamins and purchasing ingredients like L-Theanine in powder form.`
-            } else {
-                reply += "I recommend maintaining consistent schedules. Your current logs show high adherence. Keep monitoring your subjective focus and energy trends to align with your chronobiology."
-            }
+        // Map chat logs to SyncBot API message structure
+        const prevMessages = chatMessages.map(m => ({
+            role: m.sender === 'user' ? 'user' : 'assistant',
+            content: m.text
+        }))
 
-            setChatMessages(prev => [...prev, { sender: 'ai', text: reply }])
+        const payload = {
+            messages: [...prevMessages, { role: 'user', content: text }],
+            context: {
+                supplements: supplements.map(s => ({ name: s.name })),
+                recentScores: [{ energy_score: 80, focus_score: 85, sleep_score: 90 }]
+            }
+        }
+
+        try {
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+
+            if (res.ok) {
+                const reader = res.body?.getReader()
+                const decoder = new TextDecoder()
+                let responseText = ''
+
+                if (reader) {
+                    setChatMessages(prev => [...prev, { sender: 'ai', text: '' }])
+                    while (true) {
+                        const { done, value } = await reader.read()
+                        if (done) break
+
+                        const chunk = decoder.decode(value, { stream: true })
+                        responseText += chunk
+
+                        setChatMessages(prev => {
+                            const newMsgs = [...prev]
+                            newMsgs[newMsgs.length - 1].text = responseText
+                            return newMsgs
+                        })
+                    }
+                }
+            } else {
+                setChatMessages(prev => [...prev, { sender: 'ai', text: 'Sorry, I encountered an issue generating a response. Please try again!' }])
+            }
+        } catch (err) {
+            console.error('Error talking to SyncBot API:', err)
+            setChatMessages(prev => [...prev, { sender: 'ai', text: 'Network connection issue. Please verify your connection.' }])
+        } finally {
             setIsThinking(false)
-        }, 1200)
+        }
     }
 
     // Derived properties & Metrics
