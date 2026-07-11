@@ -4,6 +4,7 @@ import "./globals.css";
 import { SplashScreen } from "@/components/splash-screen";
 import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 import { OfflineBanner } from "@/components/ui/offline-banner";
+import { AuthenticatedShell } from "@/components/layout/authenticated-shell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,7 +44,9 @@ export default function RootLayout({
           <SplashScreen>
             <OfflineBanner />
             <OnboardingFlow />
-            {children}
+            <AuthenticatedShell>
+              {children}
+            </AuthenticatedShell>
           </SplashScreen>
         </div>
       </body>
