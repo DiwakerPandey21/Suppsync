@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { ProgressPhotos } from '@/components/profile/progress-photos'
 import QRCode from 'qrcode'
-import * as toImage from 'html-to-image'
+import { toPng, toJpeg } from 'html-to-image'
 
 type Badge = {
     id: string
@@ -362,9 +362,9 @@ export default function ProfilePage() {
 
             let dataUrl = ''
             if (format === 'png') {
-                dataUrl = await toImage.toPng(node, options)
+                dataUrl = await toPng(node, options)
             } else {
-                dataUrl = await toImage.toJpeg(node, options)
+                dataUrl = await toJpeg(node, options)
             }
 
             const link = document.createElement('a')
@@ -383,7 +383,7 @@ export default function ProfilePage() {
         if (!node) return
         setIsExporting(true)
         try {
-            const dataUrl = await toImage.toPng(node, { pixelRatio: 2, cacheBust: true })
+            const dataUrl = await toPng(node, { pixelRatio: 2, cacheBust: true })
             const link = document.createElement('a')
             link.download = `SuppSync-ID-${userName}.png`
             link.href = dataUrl
@@ -807,7 +807,7 @@ export default function ProfilePage() {
             {/* MODAL 1: WRAPPED CARD 2.0 OVERLAY */}
             <AnimatePresence>
                 {showWrappedModal && (
-                    <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50 overflow-y-auto">
+                    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-[99] overflow-y-auto">
                         <motion.div 
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -831,7 +831,7 @@ export default function ProfilePage() {
                                             transformOrigin: 'top left' 
                                         }}
                                         className={cn(
-                                            "bg-gradient-to-br p-16 flex flex-col justify-between absolute inset-0 select-none",
+                                            "bg-gradient-to-br p-16 flex flex-col justify-between absolute left-0 top-0 select-none",
                                             wrappedTemplate === 'Dark Premium' ? 'from-[#070714] via-[#0b0c1e] to-[#020207]' :
                                             wrappedTemplate === 'Neon' ? 'from-[#1e1b4b] via-[#311042] to-[#090514]' :
                                             wrappedTemplate === 'Aurora' ? 'from-[#021c16] via-[#05111c] to-[#0a0514]' :
@@ -945,7 +945,7 @@ export default function ProfilePage() {
             {/* MODAL 2: QR DIGITAL IDENTITY OVERLAY */}
             <AnimatePresence>
                 {showQrModal && (
-                    <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
+                    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-[99]">
                         <motion.div 
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -1003,7 +1003,7 @@ export default function ProfilePage() {
             {/* MODAL 3: BIOHACKER IDENTITY CARD */}
             <AnimatePresence>
                 {showIdCardModal && (
-                    <div className="fixed inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 z-50">
+                    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-[99]">
                         <motion.div 
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
