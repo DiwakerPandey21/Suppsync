@@ -44,13 +44,13 @@ export function Footer() {
     }, [])
 
     const handleCopyEmail = () => {
-        navigator.clipboard.writeText('support@suppsync.com')
+        navigator.clipboard.writeText('support@suppsync.ai')
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
     }
 
     return (
-        <footer className="w-full mt-16 bg-gradient-to-t from-[#020207] via-[#05050C] to-transparent relative pt-16 pb-12 overflow-hidden select-none">
+        <footer className="w-full mt-16 bg-gradient-to-t from-[#020207] via-[#05050C] to-transparent relative pt-16 pb-32 overflow-hidden select-none">
             {/* Immersive top aurora boundary */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[1px] bg-gradient-to-r from-transparent via-indigo-500/25 to-transparent pointer-events-none" />
             
@@ -100,7 +100,7 @@ export function Footer() {
                             { name: 'Insights', href: '/insights' },
                             { name: 'Roadmap', href: '/roadmap' },
                             { name: 'Documentation', href: '/docs' },
-                            { name: 'API Reference', href: '/api' }
+                            { name: 'API Reference', href: '/docs#api' }
                         ].map(item => (
                             <a 
                                 key={item.name}
@@ -116,35 +116,47 @@ export function Footer() {
 
                 {/* CHAPTER 4: Community (Live-feel profile chips) */}
                 <div className="space-y-3">
-                    <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block ml-1">Community Hubs</span>
+                    <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block ml-1">Creator & Community Hubs</span>
                     <div className="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-wider">
                         <a 
-                            href="https://discord.com" 
+                            href="https://github.com/DiwakerPandey21" 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="px-4 py-2 bg-indigo-500/5 hover:bg-indigo-500/10 border border-indigo-500/15 rounded-xl flex items-center space-x-2 text-indigo-300 transition-all duration-300"
-                        >
-                            <span>💬 Discord</span>
-                            <span className="text-[8px] font-bold text-indigo-400 bg-indigo-500/15 px-2 py-0.5 rounded">12K Active</span>
-                        </a>
-                        <a 
-                            href="https://github.com" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="px-4 py-2 bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.06] rounded-xl flex items-center space-x-2 text-slate-300 transition-all duration-300"
+                            className="px-4 py-2 bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.06] rounded-xl flex items-center space-x-2 text-slate-300 transition-all duration-300 active:scale-95"
                         >
                             <Github className="w-3.5 h-3.5" />
                             <span>GitHub</span>
-                            <span className="text-[8px] font-bold text-slate-500 bg-white/[0.05] px-2 py-0.5 rounded">Open Source</span>
+                            <span className="text-[8px] font-bold text-slate-500 bg-white/[0.05] px-2 py-0.5 rounded">DiwakerPandey21</span>
                         </a>
                         <a 
-                            href="https://twitter.com" 
+                            href="https://www.linkedin.com/in/diwaker-pandey1221/" 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="px-4 py-2 bg-cyan-500/5 hover:bg-cyan-500/10 border border-cyan-500/15 rounded-xl flex items-center space-x-2 text-cyan-300 transition-all duration-300"
+                            className="px-4 py-2 bg-blue-500/5 hover:bg-blue-500/10 border border-blue-500/15 rounded-xl flex items-center space-x-2 text-blue-300 transition-all duration-300 active:scale-95"
                         >
-                            <span>Twitter / X</span>
-                            <span className="text-[8px] font-bold text-cyan-400 bg-cyan-500/15 px-2 py-0.5 rounded">Daily Tips</span>
+                            <span className="text-xs">💼</span>
+                            <span>LinkedIn</span>
+                            <span className="text-[8px] font-bold text-blue-400 bg-blue-500/15 px-2 py-0.5 rounded">Diwaker Pandey</span>
+                        </a>
+                        <a 
+                            href="https://instagram.com/diwaker_pandey21" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-pink-500/5 hover:bg-pink-500/10 border border-pink-500/15 rounded-xl flex items-center space-x-2 text-pink-300 transition-all duration-300 active:scale-95"
+                        >
+                            <span className="text-xs">📸</span>
+                            <span>Instagram</span>
+                            <span className="text-[8px] font-bold text-pink-400 bg-pink-500/15 px-2 py-0.5 rounded">diwaker_pandey21</span>
+                        </a>
+                        <a 
+                            href="https://diwaker.netlify.app/" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/15 rounded-xl flex items-center space-x-2 text-emerald-300 transition-all duration-300 active:scale-95"
+                        >
+                            <span className="text-xs">🌐</span>
+                            <span>Portfolio</span>
+                            <span className="text-[8px] font-bold text-emerald-400 bg-emerald-500/15 px-2 py-0.5 rounded">diwaker.netlify.app</span>
                         </a>
                     </div>
                 </div>

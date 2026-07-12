@@ -167,7 +167,7 @@ Return ONLY a valid JSON array.`
                             <p className="text-xs text-slate-500 text-center py-6">No scores logged yet.</p>
                         ) : (
                             <div className="h-64 w-full">
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="100%" height={256}>
                                     <LineChart data={scoreData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
                                         <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
@@ -196,7 +196,7 @@ Return ONLY a valid JSON array.`
                             <p className="text-xs text-slate-500 text-center py-6">No logs active.</p>
                         ) : (
                             <div className="h-64 w-full">
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="100%" height={256}>
                                     <BarChart data={adherenceData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
                                         <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />

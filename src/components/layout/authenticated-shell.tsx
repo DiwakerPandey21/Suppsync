@@ -19,7 +19,7 @@ export function AuthenticatedShell({ children }: { children: React.ReactNode }) 
     }
 
     return (
-        <div className="min-h-screen bg-transparent text-foreground flex flex-col justify-between relative pb-24">
+        <div className="min-h-screen bg-transparent text-foreground flex flex-col justify-between relative">
             <div className="w-full flex-grow relative z-10">
                 {children}
             </div>
