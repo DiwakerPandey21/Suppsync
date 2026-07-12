@@ -494,9 +494,16 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="text-center md:text-left space-y-1.5 relative z-20">
-                            <div className="flex flex-col md:flex-row items-center md:items-baseline md:space-x-3.5">
+                            <div className="flex flex-col md:flex-row items-center md:items-center md:space-x-3.5">
                                 <h1 className="text-2xl font-black text-white tracking-tight uppercase leading-none">{userNickname}</h1>
                                 <span className="text-[8px] font-bold text-slate-500 uppercase tracking-wider block">@{userName}</span>
+                                <Link 
+                                    href="/settings" 
+                                    className="p-1.5 bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.06] rounded-xl text-slate-400 hover:text-white transition-all flex items-center justify-center cursor-pointer active:scale-95 mt-2 md:mt-0"
+                                    title="Account Settings"
+                                >
+                                    <Settings className="w-3.5 h-3.5" />
+                                </Link>
                             </div>
                             
                             <p className="text-xs text-slate-400 max-w-sm italic">
@@ -805,6 +812,14 @@ export default function ProfilePage() {
                     <FileText className="w-3.5 h-3.5 text-emerald-400" />
                     <span>ID Card</span>
                 </button>
+                <div className="w-[1px] h-4 bg-white/[0.08]" />
+                <Link 
+                    href="/settings"
+                    className="text-[9px] font-black text-slate-400 hover:text-white uppercase tracking-widest flex items-center space-x-1.5 transition-colors"
+                >
+                    <Settings className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>Settings</span>
+                </Link>
             </div>            {isMounted && createPortal(
                 <>
                     {/* MODAL 1: WRAPPED CARD 2.0 OVERLAY */}
