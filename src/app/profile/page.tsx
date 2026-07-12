@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import { createPortal } from 'react-dom'
 import { ProgressPhotos } from '@/components/profile/progress-photos'
 import QRCode from 'qrcode'
 import { toPng, toJpeg } from 'html-to-image'
@@ -100,6 +101,7 @@ export default function ProfilePage() {
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
+    const [isMounted, setIsMounted] = useState(false)
     
     // Inputs
     const [editedUsername, setEditedUsername] = useState('')
@@ -136,6 +138,7 @@ export default function ProfilePage() {
 
     // Determinstic seeded procedural selector
     useEffect(() => {
+        setIsMounted(true)
         if (userId) {
             const localTheme = localStorage.getItem('suppsync-cover-theme')
             if (localTheme) {
@@ -802,293 +805,296 @@ export default function ProfilePage() {
                     <FileText className="w-3.5 h-3.5 text-emerald-400" />
                     <span>ID Card</span>
                 </button>
-            </div>
+            </div>            {isMounted && createPortal(
+                <>
+                    {/* MODAL 1: WRAPPED CARD 2.0 OVERLAY */}
+                    <AnimatePresence>
+                        {showWrappedModal && (
+                            <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-[9999] overflow-y-auto">
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    className="bg-[#0b0b14] border border-white/[0.08] rounded-3xl p-6 max-w-4xl w-full flex flex-col md:flex-row gap-6 relative"
+                                >
+                                    {/* Scrollable Preview Area */}
+                                    <div className="flex-grow flex flex-col items-center">
+                                        <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Instagram Story Card Preview (1080x1920)</h3>
+                                        
+                                        {/* 9:16 story container scaled down for preview */}
+                                        <div className="border border-white/[0.06] rounded-2xl overflow-hidden shadow-2xl relative w-[270px] h-[480px] bg-slate-950">
+                                            
+                                            {/* The absolute offscreen rendering canvas element captured by html-to-image at full 1080x1920 */}
+                                            <div 
+                                                ref={wrappedRef}
+                                                style={{ 
+                                                    width: '1080px', 
+                                                    height: '1920px', 
+                                                    transform: 'scale(0.25)', 
+                                                    transformOrigin: 'top left' 
+                                                }}
+                                                className={cn(
+                                                    "bg-gradient-to-br p-16 flex flex-col justify-between absolute left-0 top-0 select-none",
+                                                    wrappedTemplate === 'Dark Premium' ? 'from-[#070714] via-[#0b0c1e] to-[#020207]' :
+                                                    wrappedTemplate === 'Neon' ? 'from-[#1e1b4b] via-[#311042] to-[#090514]' :
+                                                    wrappedTemplate === 'Aurora' ? 'from-[#021c16] via-[#05111c] to-[#0a0514]' :
+                                                    wrappedTemplate === 'Galaxy' ? 'from-[#08021c] via-[#1b082e] to-[#03000a]' :
+                                                    wrappedTemplate === 'Medical' ? 'from-[#021727] via-[#030e18] to-[#070214]' :
+                                                    wrappedTemplate === 'Cyber' ? 'from-[#241202] via-[#0e0a02] to-[#12041b]' :
+                                                    'from-[#0c0d12] via-[#12131a] to-[#090a0d]'
+                                                )}
+                                            >
+                                                <div className="space-y-12">
+                                                    <div className="flex justify-between items-start">
+                                                        <div className="flex items-center space-x-4">
+                                                            <Activity className="w-8 h-8 text-indigo-400" />
+                                                            <span className="text-xl font-black text-slate-400 uppercase tracking-widest">SuppSync Wrapped</span>
+                                                        </div>
+                                                        <span className="text-xs font-black text-white uppercase tracking-widest bg-white/[0.04] border border-white/[0.08] px-4 py-1.5 rounded-full">
+                                                            Health OS
+                                                        </span>
+                                                    </div>
 
-            {/* MODAL 1: WRAPPED CARD 2.0 OVERLAY */}
-            <AnimatePresence>
-                {showWrappedModal && (
-                    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-[99] overflow-y-auto">
-                        <motion.div 
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-[#0b0b14] border border-white/[0.08] rounded-3xl p-6 max-w-4xl w-full flex flex-col md:flex-row gap-6 relative"
-                        >
-                            {/* Scrollable Preview Area */}
-                            <div className="flex-1 flex flex-col items-center">
-                                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Instagram Story Card Preview (1080x1920)</h3>
-                                
-                                {/* 9:16 story container scaled down for preview */}
-                                <div className="border border-white/[0.06] rounded-2xl overflow-hidden shadow-2xl relative w-[270px] h-[480px] bg-slate-950">
-                                    
-                                    {/* The absolute offscreen rendering canvas element captured by html-to-image at full 1080x1920 */}
-                                    <div 
-                                        ref={wrappedRef}
-                                        style={{ 
-                                            width: '1080px', 
-                                            height: '1920px', 
-                                            transform: 'scale(0.25)', 
-                                            transformOrigin: 'top left' 
-                                        }}
-                                        className={cn(
-                                            "bg-gradient-to-br p-16 flex flex-col justify-between absolute left-0 top-0 select-none",
-                                            wrappedTemplate === 'Dark Premium' ? 'from-[#070714] via-[#0b0c1e] to-[#020207]' :
-                                            wrappedTemplate === 'Neon' ? 'from-[#1e1b4b] via-[#311042] to-[#090514]' :
-                                            wrappedTemplate === 'Aurora' ? 'from-[#021c16] via-[#05111c] to-[#0a0514]' :
-                                            wrappedTemplate === 'Galaxy' ? 'from-[#08021c] via-[#1b082e] to-[#03000a]' :
-                                            wrappedTemplate === 'Medical' ? 'from-[#021727] via-[#030e18] to-[#070214]' :
-                                            wrappedTemplate === 'Cyber' ? 'from-[#241202] via-[#0e0a02] to-[#12041b]' :
-                                            'from-[#0c0d12] via-[#12131a] to-[#090a0d]'
-                                        )}
-                                    >
-                                        <div className="space-y-12">
-                                            <div className="flex justify-between items-start">
-                                                <div className="flex items-center space-x-4">
-                                                    <Activity className="w-8 h-8 text-indigo-400" />
-                                                    <span className="text-xl font-black text-slate-400 uppercase tracking-widest">SuppSync Wrapped</span>
-                                                </div>
-                                                <span className="text-xs font-black text-white uppercase tracking-widest bg-white/[0.04] border border-white/[0.08] px-4 py-1.5 rounded-full">
-                                                    Health OS
-                                                </span>
-                                            </div>
-
-                                            <div className="flex items-center space-x-6">
-                                                <div className="w-24 h-24 rounded-full bg-slate-950 p-1 border-2 border-indigo-500 shadow-2xl">
-                                                    <div className="w-full h-full rounded-full bg-gradient-to-br from-slate-800 to-slate-950 flex items-center justify-center text-3xl font-black text-white">
-                                                        {userName.charAt(0).toUpperCase()}
+                                                    <div className="flex items-center space-x-6">
+                                                        <div className="w-24 h-24 rounded-full bg-slate-950 p-1 border-2 border-indigo-500 shadow-2xl">
+                                                            <div className="w-full h-full rounded-full bg-gradient-to-br from-slate-800 to-slate-950 flex items-center justify-center text-3xl font-black text-white">
+                                                                {userName.charAt(0).toUpperCase()}
+                                                            </div>
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <h4 className="text-3xl font-black text-white uppercase">{userNickname}</h4>
+                                                            <p className="text-sm font-bold text-indigo-400 uppercase tracking-wider">@{userName}</p>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div className="space-y-1">
-                                                    <h4 className="text-3xl font-black text-white uppercase">{userNickname}</h4>
-                                                    <p className="text-sm font-bold text-indigo-400 uppercase tracking-wider">@{userName}</p>
+
+                                                <div className="space-y-8">
+                                                    <div className="space-y-2">
+                                                        <span className="text-xs font-black text-indigo-400 uppercase tracking-widest block">Top Performance Metric</span>
+                                                        <h3 className="text-5xl font-black text-white uppercase tracking-tight">Homeostasis Spark</h3>
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-8 pt-8 border-t border-white/[0.06]">
+                                                        <div>
+                                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">BioScore Index</span>
+                                                            <span className="text-3xl font-black text-white">{bioScore}% Optimal</span>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Adherence Streak</span>
+                                                            <span className="text-3xl font-black text-orange-400">{stats.currentStreak} Days</span>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Active Supplements</span>
+                                                            <span className="text-3xl font-black text-white">{stats.supplementCount} Logged</span>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Biohacker Level</span>
+                                                            <span className="text-3xl font-black text-purple-400">Level {stats.level}</span>
+                                                        </div>
+                                                    </div>
                                                 </div>
+
+                                                <div className="pt-8 flex justify-between items-center border-t border-white/[0.06]">
+                                                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">© 2026 SUPPSYNC</span>
+                                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">suppsync.vercel.app</span>
+                                                </div>
+
                                             </div>
                                         </div>
+                                    </div>
 
-                                        <div className="space-y-8">
+                                    {/* Control Sidebar */}
+                                    <div className="w-full md:w-[320px] flex flex-col justify-between space-y-6">
+                                        <div className="space-y-6">
+                                            <h3 className="text-sm font-black text-white uppercase tracking-widest">Export Settings</h3>
+                                            
+                                            {/* Template Selector */}
                                             <div className="space-y-2">
-                                                <span className="text-xs font-black text-indigo-400 uppercase tracking-widest block">Top Performance Metric</span>
-                                                <h3 className="text-5xl font-black text-white uppercase tracking-tight">Homeostasis Spark</h3>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-8 pt-8 border-t border-white/[0.06]">
-                                                <div>
-                                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">BioScore Index</span>
-                                                    <span className="text-3xl font-black text-white">{bioScore}% Optimal</span>
-                                                </div>
-                                                <div>
-                                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Adherence Streak</span>
-                                                    <span className="text-3xl font-black text-orange-400">{stats.currentStreak} Days</span>
-                                                </div>
-                                                <div>
-                                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Active Supplements</span>
-                                                    <span className="text-3xl font-black text-white">{stats.supplementCount} Logged</span>
-                                                </div>
-                                                <div>
-                                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Biohacker Level</span>
-                                                    <span className="text-3xl font-black text-purple-400">Level {stats.level}</span>
-                                                </div>
+                                                <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">Choose Design Theme</label>
+                                                <select 
+                                                    value={wrappedTemplate} 
+                                                    onChange={(e: any) => setWrappedTemplate(e.target.value)}
+                                                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
+                                                >
+                                                    {['Dark Premium', 'Neon', 'Aurora', 'Galaxy', 'Medical', 'Cyber', 'Minimal'].map(t => (
+                                                        <option key={t} value={t}>{t}</option>
+                                                    ))}
+                                                </select>
                                             </div>
                                         </div>
 
-                                        <div className="pt-8 flex justify-between items-center border-t border-white/[0.06]">
-                                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">© 2026 SUPPSYNC</span>
-                                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">suppsync.vercel.app</span>
+                                        <div className="space-y-3 pt-6 border-t border-white/[0.06]">
+                                            <button 
+                                                disabled={isExporting}
+                                                onClick={() => exportWrappedImage('png')}
+                                                className="w-full h-11 bg-white hover:bg-slate-200 text-black font-black text-[10px] uppercase rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 cursor-pointer shadow-lg active:scale-95"
+                                            >
+                                                <Download className="w-4 h-4" />
+                                                <span>{isExporting ? 'Generating...' : 'Download png (story)'}</span>
+                                            </button>
+                                            <button 
+                                                onClick={() => setShowWrappedModal(false)}
+                                                className="w-full h-11 border border-white/[0.08] hover:border-slate-700 text-white font-black text-[10px] uppercase rounded-xl transition-all"
+                                            >
+                                                Close
+                                            </button>
                                         </div>
-
                                     </div>
-                                </div>
+                                </motion.div>
                             </div>
+                        )}
+                    </AnimatePresence>
 
-                            {/* Control Sidebar */}
-                            <div className="w-full md:w-[320px] flex flex-col justify-between space-y-6">
-                                <div className="space-y-6">
-                                    <h3 className="text-sm font-black text-white uppercase tracking-widest">Export Settings</h3>
-                                    
-                                    {/* Template Selector */}
-                                    <div className="space-y-2">
-                                        <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">Choose Design Theme</label>
-                                        <select 
-                                            value={wrappedTemplate} 
-                                            onChange={(e: any) => setWrappedTemplate(e.target.value)}
-                                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
-                                        >
-                                            {['Dark Premium', 'Neon', 'Aurora', 'Galaxy', 'Medical', 'Cyber', 'Minimal'].map(t => (
-                                                <option key={t} value={t}>{t}</option>
-                                            ))}
-                                        </select>
+                    {/* MODAL 2: QR DIGITAL IDENTITY OVERLAY */}
+                    <AnimatePresence>
+                        {showQrModal && (
+                            <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-[9999]">
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    className="bg-slate-950 border border-white/[0.08] rounded-3xl p-6 max-w-sm w-full space-y-6 text-center relative"
+                                >
+                                    <div className="space-y-4">
+                                        <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">QR Health Passport</h3>
+                                        
+                                        <div className="bg-white p-3 rounded-2xl w-48 h-48 mx-auto flex items-center justify-center shadow-2xl relative">
+                                            {qrPngUrl && <img src={qrPngUrl} alt="QR Code" className="w-full h-full" />}
+                                            <div className="absolute w-8 h-8 bg-slate-950 rounded-xl border-2 border-white flex items-center justify-center z-20">
+                                                <Activity className="w-4 h-4 text-blue-400" />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <h4 className="text-sm font-black text-white uppercase">{userNickname}</h4>
+                                            <span className="text-[8px] font-black text-indigo-400 uppercase tracking-wider">Level {stats.level} Biohacker</span>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div className="space-y-3 pt-6 border-t border-white/[0.06]">
+                                    <div className="grid grid-cols-2 gap-2 text-[10px] font-black uppercase tracking-wider">
+                                        <a 
+                                            href={qrPngUrl}
+                                            download={`SuppSync-QR-${userName}.png`}
+                                            className="h-10 border border-white/[0.08] hover:border-slate-700 text-white rounded-xl transition-all flex items-center justify-center space-x-2"
+                                        >
+                                            <Download className="w-3.5 h-3.5" />
+                                            <span>Download png</span>
+                                        </a>
+                                        <button 
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(`https://suppsync.vercel.app/u/${userName}`)
+                                                alert("Profile URL successfully copied!")
+                                            }}
+                                            className="h-10 bg-white hover:bg-slate-200 text-black rounded-xl transition-all flex items-center justify-center space-x-2"
+                                        >
+                                            <Copy className="w-3.5 h-3.5" />
+                                            <span>Copy URL</span>
+                                        </button>
+                                    </div>
+
                                     <button 
-                                        disabled={isExporting}
-                                        onClick={() => exportWrappedImage('png')}
-                                        className="w-full h-11 bg-white hover:bg-slate-200 text-black font-black text-[10px] uppercase rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 cursor-pointer shadow-lg active:scale-95"
-                                    >
-                                        <Download className="w-4 h-4" />
-                                        <span>{isExporting ? 'Generating...' : 'Download png (story)'}</span>
-                                    </button>
-                                    <button 
-                                        onClick={() => setShowWrappedModal(false)}
-                                        className="w-full h-11 border border-white/[0.08] hover:border-slate-700 text-white font-black text-[10px] uppercase rounded-xl transition-all"
+                                        onClick={() => setShowQrModal(false)}
+                                        className="w-full h-10 border border-white/[0.08] hover:border-slate-700 text-white font-black text-[10px] uppercase rounded-xl transition-all"
                                     >
                                         Close
                                     </button>
-                                </div>
+                                </motion.div>
                             </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+                        )}
+                    </AnimatePresence>
 
-            {/* MODAL 2: QR DIGITAL IDENTITY OVERLAY */}
-            <AnimatePresence>
-                {showQrModal && (
-                    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-[99]">
-                        <motion.div 
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-slate-950 border border-white/[0.08] rounded-3xl p-6 max-w-sm w-full space-y-6 text-center relative"
-                        >
-                            <div className="space-y-4">
-                                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">QR Health Passport</h3>
-                                
-                                <div className="bg-white p-3 rounded-2xl w-48 h-48 mx-auto flex items-center justify-center shadow-2xl relative">
-                                    {qrPngUrl && <img src={qrPngUrl} alt="QR Code" className="w-full h-full" />}
-                                    <div className="absolute w-8 h-8 bg-slate-950 rounded-xl border-2 border-white flex items-center justify-center z-20">
-                                        <Activity className="w-4 h-4 text-blue-400" />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-1">
-                                    <h4 className="text-sm font-black text-white uppercase">{userNickname}</h4>
-                                    <span className="text-[8px] font-black text-indigo-400 uppercase tracking-wider">Level {stats.level} Biohacker</span>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-2 text-[10px] font-black uppercase tracking-wider">
-                                <a 
-                                    href={qrPngUrl}
-                                    download={`SuppSync-QR-${userName}.png`}
-                                    className="h-10 border border-white/[0.08] hover:border-slate-700 text-white rounded-xl transition-all flex items-center justify-center space-x-2"
+                    {/* MODAL 3: BIOHACKER IDENTITY CARD */}
+                    <AnimatePresence>
+                        {showIdCardModal && (
+                            <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-[9999]">
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    className="bg-[#090a12] border border-white/[0.08] rounded-3xl p-6 max-w-sm w-full space-y-6 text-center relative"
                                 >
-                                    <Download className="w-3.5 h-3.5" />
-                                    <span>Download png</span>
-                                </a>
-                                <button 
-                                    onClick={() => {
-                                        navigator.clipboard.writeText(`https://suppsync.vercel.app/u/${userName}`)
-                                        alert("Profile URL successfully copied!")
-                                    }}
-                                    className="h-10 bg-white hover:bg-slate-200 text-black rounded-xl transition-all flex items-center justify-center space-x-2"
-                                >
-                                    <Copy className="w-3.5 h-3.5" />
-                                    <span>Copy URL</span>
-                                </button>
-                            </div>
+                                    {/* Printable Passport Card Element */}
+                                    <div 
+                                        ref={idCardRef}
+                                        className="w-[320px] h-[480px] bg-gradient-to-b from-[#111222] via-[#05060d] to-[#0e0f1a] border border-white/[0.08] rounded-3xl p-6 flex flex-col justify-between text-left relative overflow-hidden shadow-2xl mx-auto"
+                                    >
+                                        {/* Futuristic HUD mesh elements */}
+                                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent pointer-events-none" />
+                                        <div className="absolute top-4 right-4 text-[7px] font-mono text-cyan-400/60 tracking-wider">SECURE HUD 2.0</div>
+                                        
+                                        <div className="space-y-4">
+                                            <div className="flex items-center space-x-2 border-b border-white/[0.05] pb-3">
+                                                <Activity className="w-5 h-5 text-cyan-400" />
+                                                <div>
+                                                    <span className="text-[7px] font-black text-slate-500 uppercase tracking-widest block">SuppSync OS</span>
+                                                    <span className="text-[10px] font-black text-white uppercase tracking-wider">Health Identity Passport</span>
+                                                </div>
+                                            </div>
 
-                            <button 
-                                onClick={() => setShowQrModal(false)}
-                                className="w-full h-10 border border-white/[0.08] hover:border-slate-700 text-white font-black text-[10px] uppercase rounded-xl transition-all"
-                            >
-                                Close
-                            </button>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+                                            <div className="flex items-center space-x-4">
+                                                <div className="w-16 h-16 rounded-full bg-slate-950 border border-white/[0.08] flex items-center justify-center text-xl font-black text-white shrink-0">
+                                                    {userName.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <span className="text-[9px] font-black text-cyan-400 uppercase tracking-widest">@{userName}</span>
+                                                    <h4 className="text-base font-black text-white uppercase leading-none mt-0.5">{userNickname}</h4>
+                                                </div>
+                                            </div>
+                                        </div>
 
-            {/* MODAL 3: BIOHACKER IDENTITY CARD */}
-            <AnimatePresence>
-                {showIdCardModal && (
-                    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-[99]">
-                        <motion.div 
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="bg-[#090a12] border border-white/[0.08] rounded-3xl p-6 max-w-sm w-full space-y-6 text-center relative"
-                        >
-                            {/* Printable Passport Card Element */}
-                            <div 
-                                ref={idCardRef}
-                                className="w-[320px] h-[480px] bg-gradient-to-b from-[#111222] via-[#05060d] to-[#0e0f1a] border border-white/[0.08] rounded-3xl p-6 flex flex-col justify-between text-left relative overflow-hidden shadow-2xl mx-auto"
-                            >
-                                {/* Futuristic HUD mesh elements */}
-                                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent pointer-events-none" />
-                                <div className="absolute top-4 right-4 text-[7px] font-mono text-cyan-400/60 tracking-wider">SECURE HUD 2.0</div>
-                                
-                                <div className="space-y-4">
-                                    <div className="flex items-center space-x-2 border-b border-white/[0.05] pb-3">
-                                        <Activity className="w-5 h-5 text-cyan-400" />
-                                        <div>
-                                            <span className="text-[7px] font-black text-slate-500 uppercase tracking-widest block">SuppSync OS</span>
-                                            <span className="text-[10px] font-black text-white uppercase tracking-wider">Health Identity Passport</span>
+                                        <div className="space-y-2.5 pt-4 border-t border-white/[0.05]">
+                                            <div className="flex justify-between text-[10px] border-b border-white/[0.04] pb-1">
+                                                <span className="text-slate-500 font-bold uppercase">Biohacker Level:</span>
+                                                <span className="text-white font-black">Level {stats.level}</span>
+                                            </div>
+                                            <div className="flex justify-between text-[10px] border-b border-white/[0.04] pb-1">
+                                                <span className="text-slate-500 font-bold uppercase">Health BioScore:</span>
+                                                <span className="text-white font-black">{bioScore}%</span>
+                                            </div>
+                                            <div className="flex justify-between text-[10px] border-b border-white/[0.04] pb-1">
+                                                <span className="text-slate-500 font-bold uppercase">Adherence Streak:</span>
+                                                <span className="text-orange-400 font-black">{stats.currentStreak} Days</span>
+                                            </div>
+                                            <div className="flex justify-between text-[10px] border-b border-white/[0.04] pb-1">
+                                                <span className="text-slate-500 font-bold uppercase">Biomarkers Mapped:</span>
+                                                <span className="text-white font-black">{stats.biomarkerCount} Markers</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex justify-between items-end border-t border-white/[0.05] pt-4 mt-4">
+                                            <div className="space-y-1">
+                                                <span className="text-[6px] font-black text-slate-500 uppercase tracking-widest block">System Node Status</span>
+                                                <span className="text-[8px] font-black text-emerald-400 uppercase flex items-center">
+                                                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping mr-1" />
+                                                    SYNCED VERIFIED
+                                                </span>
+                                            </div>
+                                            {qrPngUrl && <img src={qrPngUrl} className="w-12 h-12 bg-white p-0.5 rounded" />}
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center space-x-4">
-                                        <div className="w-16 h-16 rounded-full bg-slate-950 border border-white/[0.08] flex items-center justify-center text-xl font-black text-white shrink-0">
-                                            {userName.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div>
-                                            <span className="text-[9px] font-black text-cyan-400 uppercase tracking-widest">@{userName}</span>
-                                            <h4 className="text-base font-black text-white uppercase leading-none mt-0.5">{userNickname}</h4>
-                                        </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <button 
+                                            onClick={() => setShowIdCardModal(false)}
+                                            className="h-10 border border-white/[0.08] hover:border-slate-700 text-white rounded-xl text-[9px] font-black uppercase tracking-wider transition-all"
+                                        >
+                                            Close
+                                        </button>
+                                        <button 
+                                            onClick={exportIdCard}
+                                            className="h-10 bg-white hover:bg-slate-200 text-black rounded-xl text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center space-x-1.5"
+                                        >
+                                            <Download className="w-3.5 h-3.5" />
+                                            <span>Download</span>
+                                        </button>
                                     </div>
-                                </div>
-
-                                <div className="space-y-2.5 pt-4 border-t border-white/[0.05]">
-                                    <div className="flex justify-between text-[10px] border-b border-white/[0.04] pb-1">
-                                        <span className="text-slate-500 font-bold uppercase">Biohacker Level:</span>
-                                        <span className="text-white font-black">Level {stats.level}</span>
-                                    </div>
-                                    <div className="flex justify-between text-[10px] border-b border-white/[0.04] pb-1">
-                                        <span className="text-slate-500 font-bold uppercase">Health BioScore:</span>
-                                        <span className="text-white font-black">{bioScore}%</span>
-                                    </div>
-                                    <div className="flex justify-between text-[10px] border-b border-white/[0.04] pb-1">
-                                        <span className="text-slate-500 font-bold uppercase">Adherence Streak:</span>
-                                        <span className="text-orange-400 font-black">{stats.currentStreak} Days</span>
-                                    </div>
-                                    <div className="flex justify-between text-[10px] border-b border-white/[0.04] pb-1">
-                                        <span className="text-slate-500 font-bold uppercase">Biomarkers Mapped:</span>
-                                        <span className="text-white font-black">{stats.biomarkerCount} Markers</span>
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-between items-end border-t border-white/[0.05] pt-4 mt-4">
-                                    <div className="space-y-1">
-                                        <span className="text-[6px] font-black text-slate-500 uppercase tracking-widest block">System Node Status</span>
-                                        <span className="text-[8px] font-black text-emerald-400 uppercase flex items-center">
-                                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping mr-1" />
-                                            SYNCED VERIFIED
-                                        </span>
-                                    </div>
-                                    {qrPngUrl && <img src={qrPngUrl} className="w-12 h-12 bg-white p-0.5 rounded" />}
-                                </div>
+                                </motion.div>
                             </div>
-
-                            <div className="grid grid-cols-2 gap-2">
-                                <button 
-                                    onClick={() => setShowIdCardModal(false)}
-                                    className="h-10 border border-white/[0.08] hover:border-slate-700 text-white rounded-xl text-[9px] font-black uppercase tracking-wider transition-all"
-                                >
-                                    Close
-                                </button>
-                                <button 
-                                    onClick={exportIdCard}
-                                    className="h-10 bg-white hover:bg-slate-200 text-black rounded-xl text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center space-x-1.5"
-                                >
-                                    <Download className="w-3.5 h-3.5" />
-                                    <span>Download</span>
-                                </button>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+                        )}
+                    </AnimatePresence>
+                </>,
+                document.body
+            )}
 
         </div>
     )
