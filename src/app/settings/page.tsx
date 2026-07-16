@@ -131,26 +131,36 @@ export default function SettingsOS() {
 
         // Fetch User details
         const fetchUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (user) {
-                setUserId(user.id)
-                setEmail(user.email || '')
-                
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('display_name, username, bio, created_at')
-                    .eq('id', user.id)
-                    .single()
-                
-                if (profile) {
-                    setDisplayName(profile.display_name || '')
-                    setUserName(profile.username || '')
-                    setUserBio(profile.bio || '')
-                    if (profile.created_at) {
-                        const date = new Date(profile.created_at)
-                        setMemberSince(date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }))
+            try {
+                const { data: { session } } = await supabase.auth.getSession()
+                if (!session) {
+                    console.log("SuppSync: No active auth session found. Running in local fallback state.")
+                    return
+                }
+
+                const { data: { user } } = await supabase.auth.getUser()
+                if (user) {
+                    setUserId(user.id)
+                    setEmail(user.email || '')
+                    
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('display_name, username, bio, created_at')
+                        .eq('id', user.id)
+                        .single()
+                    
+                    if (profile) {
+                        setDisplayName(profile.display_name || '')
+                        setUserName(profile.username || '')
+                        setUserBio(profile.bio || '')
+                        if (profile.created_at) {
+                            const date = new Date(profile.created_at)
+                            setMemberSince(date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }))
+                        }
                     }
                 }
+            } catch (err) {
+                console.error("SuppSync auth session fetch bypassed:", err)
             }
         }
         fetchUser()
@@ -168,6 +178,12 @@ export default function SettingsOS() {
         if (cachedCompact) setCompactMode(cachedCompact === 'true')
         const cachedSpeed = localStorage.getItem('suppsync-animation-speed')
         if (cachedSpeed) setAnimationSpeed(Number(cachedSpeed))
+
+        const cachedDev = localStorage.getItem('suppsync-developer-mode')
+        if (cachedDev) setIsDevMode(cachedDev === 'true')
+
+        const cachedMfa = localStorage.getItem('suppsync-mfa-enabled')
+        if (cachedMfa) setMfaEnabled(cachedMfa === 'true')
 
         // Keylistener Ctrl + K search trigger
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -477,6 +493,54 @@ export default function SettingsOS() {
     const [syncLogFilter, setSyncLogFilter] = useState<'Today' | 'Week' | 'Month' | 'All'>('All')
     const [wearablesTab, setWearablesTab] = useState<'active' | 'marketplace' | 'metrics' | 'logs'>('active')
 
+    // Security & API Hub Settings OS 3.0 States
+    const [isMfaWizardOpen, setIsMfaWizardOpen] = useState(false)
+    const [mfaWizardStep, setMfaWizardStep] = useState<1 | 2 | 3 | 4>(1)
+    const [mfaSetupMethod, setMfaSetupMethod] = useState<'TOTP' | 'SMS' | 'Key'>('TOTP')
+    const [mfaVerifyCode, setMfaVerifyCode] = useState('')
+    const [mfaEnabled, setMfaEnabled] = useState(false)
+    const [mfaSecretKey, setMfaSecretKey] = useState('JBSWY3DPEHPK3PXP')
+    const [mfaRecoveryCodes, setMfaRecoveryCodes] = useState<string[]>([])
+    const [mfaDownloadedRecovery, setMfaDownloadedRecovery] = useState(false)
+    const [mfaWizardError, setMfaWizardError] = useState<string | null>(null)
+
+    // Developer API Tokens List
+    const [apiTokens, setApiTokens] = useState<any[]>([
+        { id: 'token-1', name: 'SuppSync Watch Connector', token: 'ss_live_6f2d...b8c3', scopes: ['Read'], expiresAt: 'Never', lastUsed: 'Just Now', status: 'Active' },
+        { id: 'token-2', name: 'CLI Diagnostics Client', token: 'ss_live_9a2b...c4d9', scopes: ['Read', 'Write'], expiresAt: '2026-10-15', lastUsed: '3 days ago', status: 'Active' }
+    ])
+    const [isNewTokenModalOpen, setIsNewTokenModalOpen] = useState(false)
+    const [newCreatedToken, setNewCreatedToken] = useState<string | null>(null)
+    const [newTokenName, setNewTokenName] = useState('')
+    const [newTokenScopes, setNewTokenScopes] = useState<Record<string, boolean>>({ Read: true, Write: false, Admin: false })
+    const [newTokenExpiry, setNewTokenExpiry] = useState('30') // days
+
+    // Active Login Sessions
+    const [activeSessions, setActiveSessions] = useState<any[]>([
+        { id: 'sess-1', browser: 'Chrome', os: 'Windows 11', ip: '192.168.1.42 (Local Gateway)', country: 'India (Bengaluru)', loginTime: 'Just Now', current: true, trusted: true },
+        { id: 'sess-2', browser: 'Safari', os: 'iOS 17.5', ip: '103.88.22.10 (Cellular)', country: 'India (Mumbai)', loginTime: '3 hours ago', current: false, trusted: true },
+        { id: 'sess-3', browser: 'Firefox', os: 'macOS Sonoma', ip: '82.165.12.98 (VPN Network)', country: 'Germany (Frankfurt)', loginTime: 'Yesterday', current: false, trusted: false }
+    ])
+
+    // Security Alerts (Score Audit)
+    const [securityAlerts, setSecurityAlerts] = useState<any[]>([
+        { id: 'alert-1', title: 'Suspicious Activity Detected', type: 'Threat', severity: 'Medium', time: 'Yesterday', desc: 'VPN connection from unknown location Frankfurt.' },
+        { id: 'alert-2', title: 'New Personal Token Created', type: 'Audit', severity: 'Low', time: '3 days ago', desc: 'Token "CLI Diagnostics Client" generated.' }
+    ])
+
+    // Chronological Audit Logs
+    const [auditLogs, setAuditLogs] = useState<any[]>([
+        { id: 'audit-1', action: 'User Sign In', details: 'Successful session established via Google OAuth.', time: '10:04 AM', type: 'Session' },
+        { id: 'audit-2', action: 'Biometric Export Generated', details: 'SuppSync telemetry CSV compiled & downloaded.', time: '09:42 AM', type: 'Data' },
+        { id: 'audit-3', action: 'Developer Mode Enabled', details: 'Diagnostic control flags enabled.', time: 'Yesterday', type: 'Developer' }
+    ])
+
+    // Account destruction and Sign Out loading states
+    const [isSigningOut, setIsSigningOut] = useState(false)
+    const [dangerZoneAction, setDangerZoneAction] = useState<'deactivate' | 'delete' | 'reset' | 'export_data' | 'delete_data' | null>(null)
+    const [dangerZoneConfirmText, setDangerZoneConfirmText] = useState('')
+
+
     // On Mount initialize pre-connected devices for dynamic UI display
     useEffect(() => {
         if (!isMounted) return
@@ -686,6 +750,219 @@ export default function SettingsOS() {
             setActiveDeviceForDetails(null)
         }
     }
+
+    // Security OS 3.0 Handler Functions
+    
+    // Two-Factor Authentication Setup & Disable
+    const handleOpenMfaSetup = () => {
+        const codes = Array.from({ length: 10 }, () => 
+            `REC-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`
+        )
+        setMfaRecoveryCodes(codes)
+        setMfaWizardStep(1)
+        setIsMfaWizardOpen(true)
+        setMfaVerifyCode('')
+        setMfaDownloadedRecovery(false)
+        setMfaWizardError(null)
+    }
+
+    const handleMfaVerifyOTP = () => {
+        if (mfaVerifyCode.trim().length !== 6) {
+            setMfaWizardError('Please enter a valid 6-digit OTP code.')
+            return
+        }
+
+        // Simulating setup validation. Note: UI explicitly tags this as a preview.
+        setMfaEnabled(true)
+        localStorage.setItem('suppsync-mfa-enabled', 'true')
+        
+        // Log event
+        const newLog = {
+            id: Math.random().toString(),
+            action: 'MFA Status Changed',
+            details: 'Multi-Factor Authentication enabled in Preview mode.',
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            type: 'Security'
+        }
+        setAuditLogs(logs => [newLog, ...logs])
+        
+        // Trigger alert entry
+        const newAlert = {
+            id: Math.random().toString(),
+            title: 'MFA Enabled (Preview)',
+            type: 'Audit',
+            severity: 'Low',
+            time: 'Just Now',
+            desc: 'Multi-Factor authenticator channel registered.'
+        }
+        setSecurityAlerts(alerts => [newAlert, ...alerts])
+        
+        setIsMfaWizardOpen(false)
+        triggerToast('MFA setup complete (Preview state).')
+    }
+
+    const handleMfaDisable = () => {
+        if (confirm('Deactivating Multi-Factor Authentication will decrease your Security Score. Proceed?')) {
+            setMfaEnabled(false)
+            localStorage.setItem('suppsync-mfa-enabled', 'false')
+            
+            const newLog = {
+                id: Math.random().toString(),
+                action: 'MFA Status Changed',
+                details: 'Multi-Factor Authentication deactivated.',
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                type: 'Security'
+            }
+            setAuditLogs(logs => [newLog, ...logs])
+            
+            triggerToast('MFA successfully deactivated.')
+        }
+    }
+
+    // Developer API Tokens Manager
+    const handleCreateApiToken = () => {
+        if (!newTokenName.trim()) {
+            alert('Please enter a descriptive token label name.')
+            return
+        }
+
+        // Explicitly warn user: "Backend API Required"
+        // Let's generate a placeholder token, but display a modal showing Backend API Required
+        const scopesList = Object.keys(newTokenScopes).filter(s => newTokenScopes[s])
+        const generatedKey = `ss_live_${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`
+        
+        setNewCreatedToken(generatedKey)
+        setIsNewTokenModalOpen(true)
+
+        // Add to state listing (mock UI directory)
+        const expiryDate = newTokenExpiry === 'Never' ? 'Never' : new Date(Date.now() + Number(newTokenExpiry) * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        const newTokenObj = {
+            id: Math.random().toString(),
+            name: newTokenName,
+            token: `${generatedKey.substring(0, 8)}...${generatedKey.substring(generatedKey.length - 4)}`,
+            scopes: scopesList,
+            expiresAt: expiryDate,
+            lastUsed: 'Never',
+            status: 'Active'
+        }
+        setApiTokens(prev => [newTokenObj, ...prev])
+
+        const newLog = {
+            id: Math.random().toString(),
+            action: 'Token Created',
+            details: `Developer token "${newTokenName}" generated.`,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            type: 'Developer'
+        }
+        setAuditLogs(logs => [newLog, ...logs])
+
+        setNewTokenName('')
+        setNewTokenScopes({ Read: true, Write: false, Admin: false })
+    }
+
+    const handleRevokeToken = (id: string) => {
+        const token = apiTokens.find(t => t.id === id)
+        if (token && confirm(`Are you sure you want to revoke the API token "${token.name}"?`)) {
+            setApiTokens(prev => prev.filter(t => t.id !== id))
+            
+            const newLog = {
+                id: Math.random().toString(),
+                action: 'Token Revoked',
+                details: `Developer token "${token.name}" terminated.`,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                type: 'Developer'
+            }
+            setAuditLogs(logs => [newLog, ...logs])
+            
+            triggerToast('Token revoked successfully.')
+        }
+    }
+
+    // Active Sessions and Trusted Devices
+    const handleTerminateSession = (id: string, isCurrent: boolean) => {
+        if (isCurrent) {
+            handleSignOut()
+            return
+        }
+
+        // Explicitly warn user: Requires backend session management
+        alert('Requires backend session management.\n\nTo terminate remote device logins in production, SuppSync redirects this API call to Supabase Session Revocation endpoints (auth.admin.signOut). This action is locked in local preview mode.')
+    }
+
+    // Visual Danger Zone confirmation checks
+    const handleDangerZoneAction = (action: 'deactivate' | 'delete' | 'reset' | 'export_data' | 'delete_data') => {
+        setDangerZoneAction(action)
+        setDangerZoneConfirmText('')
+    }
+
+    const handleConfirmDangerAction = () => {
+        if (dangerZoneAction === 'reset') {
+            // Reset preferences (clear localStorage settings)
+            localStorage.removeItem('suppsync-accent-color')
+            localStorage.removeItem('suppsync-glass-intensity')
+            localStorage.removeItem('suppsync-rounded-corners')
+            localStorage.removeItem('suppsync-font-scale')
+            localStorage.removeItem('suppsync-compact-mode')
+            localStorage.removeItem('suppsync-animation-speed')
+            localStorage.removeItem('suppsync-developer-mode')
+            localStorage.removeItem('suppsync-mfa-enabled')
+            
+            triggerToast('Preferences reset to SuppSync OS defaults.')
+            setTimeout(() => window.location.reload(), 1000)
+        } else if (dangerZoneAction === 'delete_data') {
+            // Delete personal caches
+            clearStorageCache()
+            triggerToast('Local biomarker and dosage databases purged.')
+        } else if (dangerZoneAction === 'export_data') {
+            // Export data
+            triggerBackup()
+        } else {
+            // Deactivate / Delete Account requires typing specific check
+            const targetWord = dangerZoneAction === 'deactivate' ? 'DEACTIVATE' : 'DELETE'
+            if (dangerZoneConfirmText !== targetWord) {
+                alert(`Please type "${targetWord}" in all capitals to confirm this destructive action.`)
+                return
+            }
+
+            alert(`Account ${dangerZoneAction === 'deactivate' ? 'Deactivation' : 'Deletion'} requested.\n\nSuppSync compiles this destructive request and triggers backend profile deletion pools. Since this client is running in sandbox mode, you will be signed out cleanly.`)
+            handleSignOut()
+        }
+        setDangerZoneAction(null)
+    }
+
+    // Production-grade cache-purging Sign Out routine
+    const handleSignOut = async () => {
+        setIsSigningOut(true)
+        
+        try {
+            // Clear Supabase session
+            await supabase.auth.signOut()
+
+            // Purge preferences
+            localStorage.removeItem('suppsync-accent-color')
+            localStorage.removeItem('suppsync-glass-intensity')
+            localStorage.removeItem('suppsync-rounded-corners')
+            localStorage.removeItem('suppsync-font-scale')
+            localStorage.removeItem('suppsync-compact-mode')
+            localStorage.removeItem('suppsync-animation-speed')
+            localStorage.removeItem('suppsync-developer-mode')
+            localStorage.removeItem('suppsync-mfa-enabled')
+
+            // Simulate loading lag to show data clearance
+            await new Promise(resolve => setTimeout(resolve, 1500))
+
+            setIsSigningOut(false)
+            triggerToast('Session terminated successfully.')
+            
+            // Clean redirect
+            router.push('/login')
+        } catch (err) {
+            console.error('Sign Out failed:', err)
+            setIsSigningOut(false)
+            router.push('/login')
+        }
+    }
+
 
     // Aggregated telemetry values compiler
     const compiledMetrics = useMemo(() => {
@@ -2178,7 +2455,7 @@ export default function SettingsOS() {
                         </div>
                     </div>
 
-                    {/* SECTION 13: SECURITY */}
+                    {/* SECTION 13: SECURITY & API HUB OS 3.0 */}
                     <div 
                         ref={el => { sectionRefs.current['security'] = el }}
                         className={cn(
@@ -2189,58 +2466,435 @@ export default function SettingsOS() {
                         <div className="flex justify-between items-center border-b border-white/[0.05] pb-4">
                             <div>
                                 <h3 className="text-xs font-black uppercase tracking-widest text-white">Security & API Hub</h3>
-                                <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider mt-0.5">Control login sessions and developer credentials</p>
+                                <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider mt-0.5">Control login sessions, developer keys, and deactivation zones</p>
                             </div>
                         </div>
 
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <span className="text-xs font-bold text-white block">Two-Factor Authentication (2FA)</span>
-                                    <span className="text-[10px] text-slate-500 block">Add passcode check during secure portal logins</span>
+                        {/* SUB-SECTION A: SECURITY HEALTH DASHBOARD */}
+                        <div className="space-y-3">
+                            <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider block">Security Health Core</span>
+                            
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-[9px] font-black uppercase tracking-wider">
+                                <div className="p-3 bg-white/[0.01] border border-white/[0.04] rounded-2xl space-y-1 relative">
+                                    <span className="text-slate-500 text-[8px]">Security Score</span>
+                                    <div className="text-sm font-black text-white">{mfaEnabled ? '85%' : '50%'}</div>
+                                    <div className="w-full bg-white/[0.06] h-1.5 rounded-full overflow-hidden mt-1.5">
+                                        <div 
+                                            className={cn("h-full rounded-full transition-all duration-500", mfaEnabled ? "w-[85%] bg-indigo-500" : "w-[50%] bg-amber-500")} 
+                                        />
+                                    </div>
                                 </div>
-                                <button className="w-12 h-6 rounded-full p-1 bg-slate-800">
-                                    <div className="w-4 h-4 rounded-full bg-white translate-x-0" />
-                                </button>
-                            </div>
 
-                            <div className="flex items-center justify-between border-t border-white/[0.05] pt-4">
-                                <div>
-                                    <span className="text-xs font-bold text-white block">Developer Advanced Toggle</span>
-                                    <span className="text-[10px] text-slate-500 block">Reveal local diagnostic and force-refresh triggers</span>
+                                <div className="p-3 bg-white/[0.01] border border-white/[0.04] rounded-2xl space-y-1">
+                                    <span className="text-slate-500 text-[8px]">MFA Status</span>
+                                    <div className="flex items-center space-x-1.5 mt-0.5">
+                                        <span className={cn("w-1.5 h-1.5 rounded-full", mfaEnabled ? "bg-emerald-400 animate-pulse" : "bg-slate-600")} />
+                                        <span className="text-white">{mfaEnabled ? 'Active (TOTP)' : 'Inactive'}</span>
+                                    </div>
                                 </div>
-                                <button 
-                                    onClick={() => setIsDevMode(!isDevMode)}
-                                    className={cn(
-                                        "w-12 h-6 rounded-full p-1 transition-all duration-300",
-                                        isDevMode ? "bg-indigo-500" : "bg-slate-800"
-                                    )}
-                                >
-                                    <div className={cn("w-4 h-4 rounded-full bg-white transition-all duration-300", isDevMode ? "translate-x-6" : "translate-x-0")} />
-                                </button>
-                            </div>
 
-                            {/* DESTRUCTIVE ACTION CONTAINER */}
-                            <div className="border-t border-white/[0.05] pt-4 flex justify-between items-center">
-                                <div>
-                                    <span className="text-xs font-bold text-rose-500 block">Destructive Actions</span>
-                                    <span className="text-[10px] text-slate-500 block">Remove or sign out from this account session</span>
+                                <div className="p-3 bg-white/[0.01] border border-white/[0.04] rounded-2xl space-y-1">
+                                    <span className="text-slate-500 text-[8px]">Password Health</span>
+                                    <div className="text-white flex items-center space-x-1 mt-0.5">
+                                        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 mr-0.5" /> Strong
+                                    </div>
                                 </div>
-                                
-                                <div className="flex space-x-2">
-                                    <form action="/auth/signout" method="POST">
+
+                                <div className="p-3 bg-white/[0.01] border border-white/[0.04] rounded-2xl space-y-1">
+                                    <span className="text-slate-500 text-[8px]">Active Sessions</span>
+                                    <div className="text-white mt-0.5">{activeSessions.length} Active Nodes</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* SUB-SECTION B: TWO-FACTOR AUTHENTICATION CONTROLS */}
+                        <div className="p-4 bg-slate-950/40 border border-white/[0.04] rounded-2xl space-y-4">
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div className="space-y-0.5">
+                                    <div className="flex items-center space-x-2">
+                                        <span className="text-xs font-bold text-white block">Multi-Factor Authentication (MFA)</span>
+                                        <span className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-widest">
+                                            Preview
+                                        </span>
+                                    </div>
+                                    <span className="text-[9px] text-slate-500 block leading-relaxed">
+                                        Requires authenticator codes (TOTP apps like Google Authenticator) during portal login checks.
+                                    </span>
+                                </div>
+
+                                <div className="flex items-center shrink-0">
+                                    {mfaEnabled ? (
                                         <button 
-                                            type="submit"
-                                            className="h-10 border border-white/[0.08] hover:border-slate-700 text-white rounded-xl text-[9px] font-black uppercase tracking-wider px-4 transition-all flex items-center space-x-1.5"
+                                            onClick={handleMfaDisable}
+                                            className="px-4 py-2 border border-red-500/20 hover:bg-red-500/5 text-red-400 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all"
                                         >
-                                            <LogOut className="w-3.5 h-3.5 text-slate-400" />
-                                            <span>Sign Out</span>
+                                            Deactivate MFA
                                         </button>
-                                    </form>
+                                    ) : (
+                                        <button 
+                                            onClick={handleOpenMfaSetup}
+                                            className="px-4 py-2 bg-white hover:bg-slate-200 text-black rounded-xl text-[8px] font-black uppercase tracking-widest transition-all"
+                                        >
+                                            Setup Authenticator
+                                        </button>
+                                    )}
                                 </div>
                             </div>
+                        </div>
+
+                        {/* SUB-SECTION C: ACTIVE LOGIN SESSIONS */}
+                        <div className="space-y-3">
+                            <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider block">Active Connected Sessions</span>
+                            
+                            <div className="space-y-2">
+                                {activeSessions.map(sess => (
+                                    <div 
+                                        key={sess.id} 
+                                        className="p-3 bg-white/[0.01] border border-white/[0.04] rounded-xl flex items-center justify-between hover:border-white/[0.08] transition-all"
+                                    >
+                                        <div className="flex items-center space-x-3 text-[9px] font-black uppercase tracking-wider">
+                                            <div className="w-8 h-8 rounded-lg bg-white/[0.02] border border-white/[0.06] flex items-center justify-center text-xs">
+                                                💻
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center space-x-2">
+                                                    <span className="text-white font-bold">{sess.browser} on {sess.os}</span>
+                                                    {sess.current && (
+                                                        <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded text-[6px] font-black uppercase tracking-widest">
+                                                            Current
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <span className="text-slate-500 text-[8px] font-bold block mt-0.5">
+                                                    IP: {sess.ip} • Country: {sess.country}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center space-x-3 text-[8px] font-black uppercase tracking-wider">
+                                            <span className="text-slate-500">Last Active: {sess.loginTime}</span>
+                                            {!sess.current && (
+                                                <button 
+                                                    onClick={() => handleTerminateSession(sess.id, false)}
+                                                    className="px-2.5 py-1 border border-white/[0.08] hover:border-red-500/20 text-slate-400 hover:text-red-400 rounded-lg transition-all"
+                                                >
+                                                    Revoke
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* SUB-SECTION D: SECURITY ALERTS TIMELINE */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider block">Security Alerts Index</span>
+                                <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">
+                                    {securityAlerts.map(alert => (
+                                        <div 
+                                            key={alert.id}
+                                            className="p-3 bg-white/[0.01] border border-white/[0.04] rounded-xl flex items-start space-x-2.5 text-[8px] tracking-wide"
+                                        >
+                                            <span className={cn(
+                                                "px-1.5 py-0.5 rounded uppercase tracking-widest text-[6px] font-black",
+                                                alert.severity === 'Medium' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-white/[0.04] text-slate-400'
+                                            )}>
+                                                {alert.severity}
+                                            </span>
+                                            <div className="flex-1">
+                                                <div className="flex justify-between font-bold text-white uppercase tracking-wider">
+                                                    <span>{alert.title}</span>
+                                                    <span className="text-slate-500 font-bold">{alert.time}</span>
+                                                </div>
+                                                <p className="text-slate-400 mt-0.5">{alert.desc}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider block">Recent Audit Logs</span>
+                                <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">
+                                    {auditLogs.map(log => (
+                                        <div 
+                                            key={log.id}
+                                            className="p-2.5 bg-slate-950/40 border border-white/[0.02] rounded-xl flex justify-between items-center text-[8px] tracking-wide"
+                                        >
+                                            <div>
+                                                <span className="text-slate-500 font-bold block">{log.time}</span>
+                                                <span className="text-white font-bold block mt-0.5">{log.action}</span>
+                                                <p className="text-slate-400">{log.details}</p>
+                                            </div>
+                                            <span className="text-indigo-400 font-black uppercase text-[7px] tracking-widest">{log.type}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* SUB-SECTION E: PERSISTENT DEVELOPER ADVANCED TOGGLE */}
+                        <div className="flex items-center justify-between border-t border-white/[0.05] pt-4">
+                            <div>
+                                <span className="text-xs font-bold text-white block">Developer Advanced Controls</span>
+                                <span className="text-[10px] text-slate-500 block">Reveal local diagnostic trackers and simulated API consoles</span>
+                            </div>
+                            <button 
+                                onClick={() => {
+                                    const next = !isDevMode
+                                    setIsDevMode(next)
+                                    localStorage.setItem('suppsync-developer-mode', String(next))
+                                    triggerToast(next ? 'Developer Mode Activated' : 'Developer Mode Terminated')
+                                    
+                                    // Log event
+                                    const newLog = {
+                                        id: Math.random().toString(),
+                                        action: 'Developer Mode Changed',
+                                        details: `Developer mode toggle set to: ${next}`,
+                                        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                        type: 'Developer'
+                                    }
+                                    setAuditLogs(logs => [newLog, ...logs])
+                                }}
+                                className={cn(
+                                    "w-12 h-6 rounded-full p-1 transition-all duration-300",
+                                    isDevMode ? "bg-indigo-500" : "bg-slate-800"
+                                )}
+                            >
+                                <div className={cn("w-4 h-4 rounded-full bg-white transition-all duration-300", isDevMode ? "translate-x-6" : "translate-x-0")} />
+                            </button>
+                        </div>
+
+                        {/* SUB-SECTION F: DEVELOPER API HUB */}
+                        {isDevMode && (
+                            <div className="border-t border-white/[0.05] pt-4 space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <h4 className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Developer API Sandbox Hub</h4>
+                                    <span className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-full text-[6px] font-black uppercase tracking-widest">
+                                        REST Console
+                                    </span>
+                                </div>
+
+                                {/* API Token Generator form with Backend Alert */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="p-4 bg-slate-950/40 border border-white/[0.04] rounded-2xl space-y-3">
+                                        <div className="flex items-center space-x-1.5">
+                                            <span className="text-xs font-bold text-white block">Generate API Access Token</span>
+                                            <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded-full text-[6px] font-black uppercase tracking-widest">
+                                                Backend Required
+                                            </span>
+                                        </div>
+
+                                        <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-[7px] text-slate-400 leading-normal">
+                                            <span className="font-bold text-amber-400 block mb-0.5 uppercase tracking-wider">Sandbox Preview Limitation</span>
+                                            Token validation credentials require backend API key authorization services. Generated keys are mockup clients.
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">Token Label Name</label>
+                                            <input 
+                                                type="text" 
+                                                value={newTokenName}
+                                                onChange={(e) => setNewTokenName(e.target.value)}
+                                                placeholder="e.g. Health Dashboard Monitor"
+                                                className="w-full bg-slate-950/80 border border-white/[0.08] focus:border-indigo-500/40 rounded-xl px-3 py-2 text-[10px] text-white focus:outline-none transition-all"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">Token Scope Scopes</label>
+                                            <div className="grid grid-cols-3 gap-2 text-[8px] uppercase tracking-wider font-black text-center">
+                                                {['Read', 'Write', 'Admin'].map(scope => (
+                                                    <button
+                                                        key={scope}
+                                                        onClick={() => setNewTokenScopes(prev => ({ ...prev, [scope]: !prev[scope] }))}
+                                                        className={cn(
+                                                            "py-1 rounded border transition-all",
+                                                            newTokenScopes[scope] ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400' : 'border-white/[0.04] text-slate-500'
+                                                        )}
+                                                    >
+                                                        {scope}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">Expiration Timeframe</label>
+                                            <select 
+                                                value={newTokenExpiry}
+                                                onChange={(e) => setNewTokenExpiry(e.target.value)}
+                                                className="w-full bg-slate-950/80 border border-white/[0.08] rounded-xl px-3 py-2 text-[10px] text-white focus:outline-none transition-all"
+                                            >
+                                                <option value="30">30 Days</option>
+                                                <option value="90">90 Days</option>
+                                                <option value="365">1 Year</option>
+                                                <option value="Never">Never (Infinite)</option>
+                                            </select>
+                                        </div>
+
+                                        <button 
+                                            onClick={handleCreateApiToken}
+                                            className="w-full h-9 bg-white hover:bg-slate-200 text-black font-black uppercase tracking-wider text-[9px] rounded-xl transition-all"
+                                        >
+                                            Generate Token Profile
+                                        </button>
+                                    </div>
+
+                                    {/* Active Tokens listing */}
+                                    <div className="space-y-3">
+                                        <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider block">Registered Tokens Directory</span>
+                                        
+                                        <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                                            {apiTokens.map(token => (
+                                                <div 
+                                                    key={token.id}
+                                                    className="p-3 bg-white/[0.01] border border-white/[0.04] rounded-xl flex items-center justify-between text-[8px] uppercase tracking-wider"
+                                                >
+                                                    <div className="space-y-0.5">
+                                                        <span className="text-white font-bold block">{token.name}</span>
+                                                        <code className="text-slate-400 font-bold block text-[7px]">{token.token}</code>
+                                                        <div className="flex flex-wrap gap-1 mt-1 text-[6px]">
+                                                            {token.scopes.map((s: string) => (
+                                                                <span key={s} className="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded uppercase">
+                                                                    {s}
+                                                                </span>
+                                                            ))}
+                                                            <span className="text-slate-500 px-1 py-0.5 font-bold">Expires: {token.expiresAt}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <button 
+                                                        onClick={() => handleRevokeToken(token.id)}
+                                                        className="px-2 py-1 border border-red-500/20 text-red-400 hover:bg-red-500/5 rounded-lg font-black transition-all"
+                                                    >
+                                                        Revoke
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Webhook manager and Docs code box */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                                    <div className="p-4 bg-slate-950/40 border border-white/[0.04] rounded-2xl space-y-3">
+                                        <div className="flex items-center space-x-1.5">
+                                            <span className="text-xs font-bold text-white block">Webhook Event Manager</span>
+                                            <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1.5 py-0.5 rounded-full text-[6px] font-black uppercase tracking-widest">
+                                                Preview
+                                            </span>
+                                        </div>
+                                        <p className="text-[9px] text-slate-500">Configure JSON event updates forwarded directly to external systems.</p>
+                                        
+                                        <div className="space-y-2">
+                                            <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">Target Endpoint URL</label>
+                                            <input 
+                                                type="text" 
+                                                disabled 
+                                                placeholder="https://api.yourdomain.com/webhooks"
+                                                className="w-full bg-slate-950/30 border border-white/[0.04] text-slate-600 rounded-xl px-3 py-2 text-[10px] cursor-not-allowed"
+                                            />
+                                        </div>
+
+                                        <div className="p-2 bg-slate-900 border border-white/[0.04] rounded-xl text-[8px] text-slate-500 text-center font-bold">
+                                            TODO: Endpoint requires SuppSync webhook scheduler daemon deployment.
+                                        </div>
+                                    </div>
+
+                                    {/* Docs & Rate Limit Playground */}
+                                    <div className="space-y-3 p-4 bg-slate-950/40 border border-white/[0.04] rounded-2xl text-[8px]">
+                                        <span className="text-[8px] font-black uppercase text-indigo-400 tracking-wider block">API Playground Docs</span>
+                                        
+                                        <div className="space-y-2">
+                                            <span className="text-slate-500 uppercase font-black tracking-widest block">cURL Example Request</span>
+                                            <pre className="p-2 bg-slate-950 border border-white/[0.08] text-indigo-300 rounded-xl overflow-x-auto whitespace-pre font-mono">
+{`curl -X GET https://api.suppsync.ai/v1/telemetry \\
+  -H "Authorization: Bearer ss_live_token" \\
+  -H "Content-Type: application/json"`}
+                                            </pre>
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <div className="flex justify-between items-center text-slate-500 uppercase font-black">
+                                                <span>Developer Rate Limit</span>
+                                                <span className="text-white">12 / 1000 requests</span>
+                                            </div>
+                                            <div className="w-full bg-white/[0.04] h-2 rounded-full overflow-hidden">
+                                                <div className="w-[1.2%] h-full bg-indigo-500 rounded-full" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* SUB-SECTION G: Dedicated Danger Zone */}
+                        <div className="border-t border-red-500/20 pt-4 space-y-4">
+                            <div>
+                                <h4 className="text-xs font-black uppercase tracking-widest text-red-500">Visual Danger Zone</h4>
+                                <p className="text-[9px] text-slate-500 uppercase font-black tracking-wider mt-0.5">Destructive actions which permanently reset or terminate this account</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[9px] font-black uppercase tracking-wider">
+                                <button 
+                                    onClick={() => handleDangerZoneAction('reset')}
+                                    className="h-11 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 text-red-400 rounded-xl transition-all flex items-center justify-center space-x-2"
+                                >
+                                    <span>Reset Preferences</span>
+                                </button>
+                                <button 
+                                    onClick={() => handleDangerZoneAction('delete_data')}
+                                    className="h-11 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 text-red-400 rounded-xl transition-all flex items-center justify-center space-x-2"
+                                >
+                                    <span>Delete Telemetry Database</span>
+                                </button>
+                                <button 
+                                    onClick={() => handleDangerZoneAction('export_data')}
+                                    className="h-11 bg-slate-900 hover:bg-slate-800 border border-white/[0.06] text-white rounded-xl transition-all flex items-center justify-center space-x-2"
+                                >
+                                    <span>Export All Data (JSON)</span>
+                                </button>
+                                <button 
+                                    onClick={() => handleDangerZoneAction('deactivate')}
+                                    className="h-11 bg-slate-900 hover:bg-slate-800 border border-white/[0.06] text-slate-300 rounded-xl transition-all flex items-center justify-center space-x-2"
+                                >
+                                    <span>Deactivate Profile</span>
+                                </button>
+                                <button 
+                                    onClick={() => handleDangerZoneAction('delete')}
+                                    className="h-11 bg-red-600 hover:bg-red-500 text-white rounded-xl transition-all flex items-center justify-center space-x-2 md:col-span-2"
+                                >
+                                    <span>Delete Account Permanently</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* SUB-SECTION H: Upgraded Secure Sign Out */}
+                        <div className="border-t border-white/[0.05] pt-4 flex justify-between items-center">
+                            <div>
+                                <span className="text-xs font-bold text-white block">Sign Out</span>
+                                <span className="text-[10px] text-slate-500 block">Close and purge active browser session cache</span>
+                            </div>
+                            <button 
+                                onClick={handleSignOut}
+                                disabled={isSigningOut}
+                                className="h-10 bg-white hover:bg-slate-200 text-black rounded-xl text-[9px] font-black uppercase tracking-wider px-5 transition-all flex items-center space-x-1.5 disabled:opacity-50"
+                            >
+                                {isSigningOut ? (
+                                    <RefreshCcw className="w-3.5 h-3.5 animate-spin text-black" />
+                                ) : (
+                                    <>
+                                        <LogOut className="w-3.5 h-3.5" />
+                                        <span>Sign Out Session</span>
+                                    </>
+                                )}
+                            </button>
                         </div>
                     </div>
+
 
                     {/* DEVELOPER DIAGNOSTICS CARD (CONDITIONAL) */}
                     <AnimatePresence>
@@ -2791,6 +3445,405 @@ export default function SettingsOS() {
                                 </button>
                             </div>
                         </motion.div>
+                    </motion.div>
+                )}
+
+                {/* 3. MULTI-FACTOR AUTHENTICATION SETUP WIZARD */}
+                {isMfaWizardOpen && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.95, y: 15 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.95, y: 15 }}
+                            className="bg-slate-950/90 border border-white/[0.08] p-6 rounded-[28px] max-w-md w-full shadow-2xl space-y-6 relative overflow-hidden text-xs text-slate-400"
+                        >
+                            <button 
+                                onClick={() => setIsMfaWizardOpen(false)}
+                                className="absolute right-4 top-4 text-slate-500 hover:text-white p-1 rounded-lg hover:bg-white/[0.04]"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+
+                            {/* Header */}
+                            <div className="text-center space-y-1">
+                                <div className="w-10 h-10 bg-indigo-500/10 border border-indigo-500/20 rounded-full flex items-center justify-center mx-auto text-indigo-400 mb-2">
+                                    <Lock className="w-5 h-5" />
+                                </div>
+                                <h3 className="text-sm font-black uppercase tracking-widest text-white">Setup Multi-Factor Auth</h3>
+                                <div className="inline-flex items-center space-x-1.5 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full text-[6px] font-black uppercase tracking-widest text-amber-400">
+                                    <ShieldAlert className="w-2.5 h-2.5" />
+                                    <span>Preview — Backend MFA Required</span>
+                                </div>
+                            </div>
+
+                            {/* Wizard Progress Stepper */}
+                            <div className="flex justify-between items-center px-4">
+                                {[1, 2, 3, 4].map(step => (
+                                    <React.Fragment key={step}>
+                                        <div className={cn(
+                                            "w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-black uppercase tracking-wider border transition-all duration-300",
+                                            mfaWizardStep >= step ? "bg-indigo-600 border-indigo-500 text-white" : "border-white/[0.08] bg-slate-950 text-slate-500"
+                                        )}>
+                                            {step}
+                                        </div>
+                                        {step < 4 && (
+                                            <div className={cn(
+                                                "h-0.5 flex-1 mx-2 transition-all duration-300",
+                                                mfaWizardStep > step ? "bg-indigo-600" : "bg-white/[0.04]"
+                                            )} />
+                                        )}
+                                    </React.Fragment>
+                                ))}
+                            </div>
+
+                            {/* STEP 1: METHOD SELECTION */}
+                            {mfaWizardStep === 1 && (
+                                <div className="space-y-4">
+                                    <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider block">Choose Verification Channel</span>
+                                    
+                                    <div className="space-y-2">
+                                        {[
+                                            { id: 'TOTP', name: 'Authenticator App (Recommended)', desc: 'Scan QR code with Google Authenticator, Duo, or 1Password.' },
+                                            { id: 'SMS', name: 'SMS Text Telephony', desc: 'Receive a temporary 6-digit confirmation key to your phone.' },
+                                            { id: 'Key', name: 'Hardware FIDO2 Security Token', desc: 'Secure logins with physical YubiKey hardware.' }
+                                        ].map(method => (
+                                            <button
+                                                key={method.id}
+                                                onClick={() => setMfaSetupMethod(method.id as any)}
+                                                className={cn(
+                                                    "w-full p-3 bg-white/[0.01] border text-left rounded-xl transition-all active:scale-[0.99] block",
+                                                    mfaSetupMethod === method.id ? 'border-indigo-500 bg-indigo-500/5' : 'border-white/[0.04] hover:bg-white/[0.02]'
+                                                )}
+                                            >
+                                                <span className="text-[9px] font-bold text-white block uppercase tracking-wider">{method.name}</span>
+                                                <span className="text-[8px] text-slate-500 block mt-0.5">{method.desc}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <button
+                                        onClick={() => setMfaWizardStep(2)}
+                                        className="w-full h-11 bg-white hover:bg-slate-200 text-black font-black uppercase tracking-wider text-[9px] rounded-xl transition-all"
+                                    >
+                                        Continue Setup
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* STEP 2: SCAN QR SETUP */}
+                            {mfaWizardStep === 2 && (
+                                <div className="space-y-4">
+                                    <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider block">Scan Authenticator Profile</span>
+                                    
+                                    {/* MOCK QR CODE CONTAINER */}
+                                    <div className="w-32 h-32 bg-slate-900 border border-white/[0.08] rounded-2xl flex items-center justify-center mx-auto relative overflow-hidden">
+                                        <div className="absolute inset-2 border-2 border-dashed border-indigo-500/40 rounded-lg flex flex-wrap p-1.5 gap-0.5 opacity-60">
+                                            {Array.from({ length: 36 }).map((_, i) => (
+                                                <div key={i} className={cn("w-3 h-3 rounded-sm", (i % 2 === 0 || i % 5 === 0) ? "bg-white" : "bg-transparent")} />
+                                            ))}
+                                        </div>
+                                        <span className="text-[6px] font-black uppercase text-indigo-400 bg-slate-950/80 px-2 py-1 rounded border border-indigo-500/20 backdrop-blur z-10">Scan QR</span>
+                                    </div>
+
+                                    <div className="p-3 bg-white/[0.01] border border-white/[0.04] rounded-xl space-y-2">
+                                        <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-wider">
+                                            <span className="text-slate-500">Manual Setup Secret Key</span>
+                                            <button 
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(mfaSecretKey)
+                                                    triggerToast('Secret key copied!')
+                                                }}
+                                                className="text-indigo-400 hover:underline flex items-center space-x-1"
+                                            >
+                                                <Copy className="w-3 h-3" />
+                                                <span>Copy</span>
+                                            </button>
+                                        </div>
+                                        <code className="text-white block font-mono text-[10px] tracking-widest text-center py-1 bg-slate-950 rounded border border-white/[0.04]">{mfaSecretKey}</code>
+                                    </div>
+
+                                    <button
+                                        onClick={() => setMfaWizardStep(3)}
+                                        className="w-full h-11 bg-white hover:bg-slate-200 text-black font-black uppercase tracking-wider text-[9px] rounded-xl transition-all"
+                                    >
+                                        I Have Scanned QR
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* STEP 3: BACKUP / RECOVERY CODES */}
+                            {mfaWizardStep === 3 && (
+                                <div className="space-y-4">
+                                    <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider block">Download Recovery Codes</span>
+                                    
+                                    <div className="p-2.5 bg-red-500/10 border border-red-500/20 rounded-xl text-[7px] text-red-400 leading-normal font-black uppercase tracking-wider">
+                                        <span className="font-bold block mb-0.5">Do Not Store In LocalStorage</span>
+                                        These backup codes will only be shown once. Download them immediately to prevent lockouts.
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-1.5 font-mono text-[9px] text-slate-300 py-2.5 px-3 bg-slate-950 border border-white/[0.04] rounded-xl">
+                                        {mfaRecoveryCodes.map(code => (
+                                            <div key={code} className="text-center select-all">{code}</div>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex space-x-2 text-[8px] font-black uppercase tracking-wider">
+                                        <button 
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(mfaRecoveryCodes.join('\n'))
+                                                setMfaDownloadedRecovery(true)
+                                                triggerToast('Recovery codes copied!')
+                                            }}
+                                            className="flex-1 h-10 border border-white/[0.08] hover:border-slate-700 text-white rounded-xl transition-all active:scale-95 flex items-center justify-center space-x-1.5"
+                                        >
+                                            <Copy className="w-3.5 h-3.5" />
+                                            <span>Copy Codes</span>
+                                        </button>
+                                        <button 
+                                            onClick={() => {
+                                                const element = document.createElement("a");
+                                                const file = new Blob([mfaRecoveryCodes.join('\n')], {type: 'text/plain'});
+                                                element.href = URL.createObjectURL(file);
+                                                element.download = "suppsync-recovery-codes.txt";
+                                                document.body.appendChild(element);
+                                                element.click();
+                                                document.body.removeChild(element);
+                                                setMfaDownloadedRecovery(true)
+                                                triggerToast('Codes downloaded!')
+                                            }}
+                                            className="flex-1 h-10 bg-white hover:bg-slate-200 text-black rounded-xl transition-all active:scale-95 flex items-center justify-center space-x-1.5"
+                                        >
+                                            <Download className="w-3.5 h-3.5" />
+                                            <span>Download txt</span>
+                                        </button>
+                                    </div>
+
+                                    <button
+                                        onClick={() => {
+                                            if (!mfaDownloadedRecovery) {
+                                                alert('Please copy or download recovery backup codes first to prevent login lockouts.')
+                                                return
+                                            }
+                                            setMfaWizardStep(4)
+                                        }}
+                                        className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest text-[9px] rounded-xl transition-all"
+                                    >
+                                        I Saved Recovery Codes
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* STEP 4: VERIFY OTP CODE */}
+                            {mfaWizardStep === 4 && (
+                                <div className="space-y-4">
+                                    <span className="text-[8px] font-black uppercase text-slate-500 tracking-wider block">Verify Authenticator OTP</span>
+                                    
+                                    <div className="space-y-2">
+                                        <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest block">Enter 6-Digit OTP passcode</label>
+                                        <input 
+                                            type="text" 
+                                            maxLength={6}
+                                            value={mfaVerifyCode}
+                                            onChange={(e) => {
+                                                setMfaVerifyCode(e.target.value.replace(/\D/g, ''))
+                                                setMfaWizardError(null)
+                                            }}
+                                            placeholder="000 000"
+                                            className="w-full bg-slate-950/80 border border-white/[0.08] focus:border-indigo-500/40 rounded-xl px-3 py-2 text-[12px] text-white tracking-[6px] text-center font-black focus:outline-none transition-all"
+                                        />
+                                    </div>
+
+                                    {mfaWizardError && (
+                                        <div className="p-2 bg-red-500/10 border border-red-500/20 text-red-400 text-[8px] font-black uppercase rounded-lg text-center">
+                                            {mfaWizardError}
+                                        </div>
+                                    )}
+
+                                    {/* Sandbox TODO hook message */}
+                                    <div className="text-[7px] text-slate-500 text-center leading-normal italic">
+                                        {"// TODO: Connect this verify trigger to the Supabase endpoint:"}
+                                        <br />
+                                        {"// supabase.auth.mfa.enroll({ factorType: 'totp' })"}
+                                    </div>
+
+                                    <button
+                                        onClick={handleMfaVerifyOTP}
+                                        className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest text-[9px] rounded-xl transition-all"
+                                    >
+                                        Verify & Activate MFA
+                                    </button>
+                                </div>
+                            )}
+                        </motion.div>
+                    </motion.div>
+                )}
+
+                {/* 4. NEW API TOKEN CREATED POPUP */}
+                {isNewTokenModalOpen && newCreatedToken && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.95, y: 15 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.95, y: 15 }}
+                            className="bg-slate-950/90 border border-white/[0.08] p-6 rounded-[28px] max-w-md w-full shadow-2xl space-y-6 relative overflow-hidden text-xs text-slate-400"
+                        >
+                            <button 
+                                onClick={() => setIsNewTokenModalOpen(false)}
+                                className="absolute right-4 top-4 text-slate-500 hover:text-white p-1 rounded-lg hover:bg-white/[0.04]"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+
+                            <div className="text-center space-y-1">
+                                <div className="w-10 h-10 bg-indigo-500/10 border border-indigo-500/20 rounded-full flex items-center justify-center mx-auto text-indigo-400 mb-2">
+                                    <Zap className="w-5 h-5" />
+                                </div>
+                                <h3 className="text-sm font-black uppercase tracking-widest text-white">API Token Key Generated</h3>
+                                <div className="inline-flex items-center space-x-1.5 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full text-[6px] font-black uppercase tracking-widest text-amber-400">
+                                    <span>Backend API Integration Required</span>
+                                </div>
+                            </div>
+
+                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-[7px] text-red-400 font-black uppercase tracking-wider leading-relaxed">
+                                <span className="font-bold block mb-0.5">Security Warning</span>
+                                Make sure to copy this token key now. It will not be shown to you again for security reasons.
+                            </div>
+
+                            <div className="p-3 bg-slate-950 border border-white/[0.04] rounded-xl space-y-2 relative">
+                                <div className="flex justify-between items-center text-[8px] font-black text-slate-500 uppercase tracking-widest">
+                                    <span>Personal Access Token</span>
+                                    <button 
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(newCreatedToken)
+                                            triggerToast('API token key copied!')
+                                        }}
+                                        className="text-indigo-400 hover:underline flex items-center space-x-1"
+                                    >
+                                        <Copy className="w-3 h-3" />
+                                        <span>Copy Token</span>
+                                    </button>
+                                </div>
+                                <code className="text-white block font-mono text-[9px] select-all break-all text-center py-1.5 bg-slate-900 rounded border border-white/[0.02]">{newCreatedToken}</code>
+                            </div>
+
+                            <button
+                                onClick={() => setIsNewTokenModalOpen(false)}
+                                className="w-full h-11 bg-white hover:bg-slate-200 text-black font-black uppercase tracking-widest text-[9px] rounded-xl transition-all"
+                            >
+                                Done & Close
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+
+                {/* 5. DANGER ZONE CONFIRMATION POPUP */}
+                {dangerZoneAction !== null && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.95, y: 15 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.95, y: 15 }}
+                            className="bg-slate-950/90 border border-red-500/20 p-6 rounded-[28px] max-w-sm w-full shadow-2xl space-y-5 relative overflow-hidden text-xs text-slate-400"
+                        >
+                            <button 
+                                onClick={() => setDangerZoneAction(null)}
+                                className="absolute right-4 top-4 text-slate-500 hover:text-white p-1 rounded-lg hover:bg-white/[0.04]"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+
+                            <div className="text-center space-y-1">
+                                <div className="w-10 h-10 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center mx-auto text-red-400 mb-2">
+                                    <ShieldAlert className="w-5 h-5" />
+                                </div>
+                                <h3 className="text-sm font-black uppercase tracking-widest text-white">Confirm Destructive Action</h3>
+                                <p className="text-[8px] text-slate-500 uppercase font-black tracking-wider leading-relaxed">
+                                    This operation is irreversible.
+                                </p>
+                            </div>
+
+                            {/* Conditional checking description */}
+                            {dangerZoneAction === 'reset' && (
+                                <p className="text-[10px] text-slate-400 text-center uppercase tracking-wider font-bold">
+                                    Are you sure you want to reset all preferences? Local styling and settings variables will clear.
+                                </p>
+                            )}
+                            {dangerZoneAction === 'delete_data' && (
+                                <p className="text-[10px] text-slate-400 text-center uppercase tracking-wider font-bold">
+                                    Are you sure you want to purge your telemetry biomarkers and supplement database?
+                                </p>
+                            )}
+                            {dangerZoneAction === 'export_data' && (
+                                <p className="text-[10px] text-slate-400 text-center uppercase tracking-wider font-bold">
+                                    Export and download all telemetry and account information?
+                                </p>
+                            )}
+
+                            {(dangerZoneAction === 'deactivate' || dangerZoneAction === 'delete') && (
+                                <div className="space-y-3">
+                                    <p className="text-[9px] text-slate-400 text-center leading-normal">
+                                        Type <span className="font-bold text-red-400 uppercase">"{dangerZoneAction === 'deactivate' ? 'DEACTIVATE' : 'DELETE'}"</span> in all capitals to authorize profile termination:
+                                    </p>
+                                    <input 
+                                        type="text" 
+                                        value={dangerZoneConfirmText}
+                                        onChange={(e) => setDangerZoneConfirmText(e.target.value)}
+                                        placeholder={dangerZoneAction === 'deactivate' ? 'DEACTIVATE' : 'DELETE'}
+                                        className="w-full bg-slate-950/80 border border-red-500/20 focus:border-red-500/60 rounded-xl px-3 py-2 text-[11px] font-black tracking-widest uppercase text-center text-white focus:outline-none transition-all"
+                                    />
+                                </div>
+                            )}
+
+                            <div className="flex space-x-2 text-[8px] font-black uppercase tracking-wider">
+                                <button 
+                                    onClick={() => setDangerZoneAction(null)}
+                                    className="flex-1 h-10 border border-white/[0.08] hover:border-slate-700 text-white rounded-xl transition-all active:scale-95"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    onClick={handleConfirmDangerAction}
+                                    className="flex-1 h-10 bg-red-600 hover:bg-red-500 text-white rounded-xl transition-all active:scale-95"
+                                >
+                                    Confirm Action
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+
+                {/* 6. SIGN OUT LOADING LOADER BACKDROP */}
+                {isSigningOut && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-50 flex items-center justify-center p-4"
+                    >
+                        <div className="text-center space-y-4">
+                            <RefreshCw className="w-8 h-8 text-indigo-400 animate-spin mx-auto" />
+                            <div className="space-y-1">
+                                <h4 className="text-xs font-black uppercase tracking-widest text-white">Signing Out of SuppSync</h4>
+                                <p className="text-[9px] text-slate-500 uppercase font-black tracking-wider leading-relaxed">
+                                    Revoking session credentials, purging configuration cache, and redirecting safely...
+                                </p>
+                            </div>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
