@@ -182,9 +182,9 @@ export default function SettingsOS() {
                     
                     const { data: profile } = await supabase
                         .from('profiles')
-                        .select('display_name, username, bio, created_at')
+                        .select('*')
                         .eq('id', user.id)
-                        .single()
+                        .maybeSingle()
                     
                     if (profile) {
                         setDisplayName(profile.display_name || '')
