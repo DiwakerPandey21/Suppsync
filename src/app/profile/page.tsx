@@ -168,9 +168,9 @@ export default function ProfilePage() {
 
             const { data: profile } = await supabase
                 .from('profiles')
-                .select('current_streak, display_name, bio, level, xp, username')
+                .select('*')
                 .eq('id', user.id)
-                .single()
+                .maybeSingle()
 
             const nameVal = profile?.username || user.email?.split('@')[0] || 'biohacker'
             const nickVal = profile?.display_name || 'SuppSync Member'
@@ -193,15 +193,20 @@ export default function ProfilePage() {
 
             const uniqueDaysCount = new Set(uniqueDaysRes.data?.map(d => d.log_date)).size
 
+            const totalLogs = logsRes.count || 0
+            const computedXp = (profile as any)?.xp || (totalLogs * 10)
+            const computedLevel = (profile as any)?.level || Math.max(1, Math.floor(computedXp / 100) + 1)
+            const computedStreak = (profile as any)?.current_streak || (uniqueDaysCount > 0 ? 1 : 0)
+
             setStats({
-                totalLogsTaken: logsRes.count || 0,
-                currentStreak: profile?.current_streak || 0,
+                totalLogsTaken: totalLogs,
+                currentStreak: computedStreak,
                 supplementCount: suppRes.count || 0,
                 biomarkerCount: bioRes.count || 0,
-                protocolsAdopted: profile?.current_streak ? 1 : 0,
+                protocolsAdopted: computedStreak ? 1 : 0,
                 daysActive: uniqueDaysCount || 0,
-                xp: profile?.xp || 0,
-                level: profile?.level || 1
+                xp: computedXp,
+                level: computedLevel
             })
             setIsLoading(false)
         }
