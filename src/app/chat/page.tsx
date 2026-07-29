@@ -8,7 +8,7 @@ import {
     Edit3, Pin, Share2, Download, RefreshCw, Sliders, Zap, Flame, 
     Activity, Dna, Pill, FlaskConical, Heart, Info, ChevronDown, 
     ChevronUp, X, Clock, BookOpen, FileUp, Award, CornerDownLeft,
-    Layers, ShieldCheck, ArrowRight, Brain, AlertTriangle
+    Layers, ShieldCheck, ArrowRight, Brain, AlertTriangle, Volume2, VolumeX
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
@@ -32,16 +32,12 @@ type ChatSession = {
 
 const SUGGESTED_PROMPT_CHIPS = [
     { label: 'Analyze My Current Stack', icon: Pill, prompt: 'Analyze my current supplement stack for chemical compatibility, dosage timing, and potential gaps.' },
-    { label: 'Optimize Sleep Protocol', icon: MoonIcon, prompt: 'Build an evidence-based sleep optimization protocol using natural supplements and circadian timing.' },
+    { label: 'Optimize Sleep Protocol', icon: Clock, prompt: 'Build an evidence-based sleep optimization protocol using natural supplements and circadian timing.' },
     { label: 'Review Lab Biomarkers', icon: FlaskConical, prompt: 'Interpret my latest blood test lab report and highlight markers out of optimal biohacking ranges.' },
     { label: 'Supplement Interactions', icon: Zap, prompt: 'Are there any negative drug or compound interactions between Creatine, Caffeine, and Ashwagandha?' },
     { label: 'MTHFR Genotype Guidance', icon: Dna, prompt: 'What supplements and methylated vitamins should I take based on MTHFR gene mutation variants?' },
     { label: 'Post-Workout Recovery', icon: Flame, prompt: 'What is the optimal post-workout supplement stack to minimize muscle soreness and reduce systemic inflammation?' }
 ]
-
-function MoonIcon(props: any) {
-    return <Clock {...props} />
-}
 
 const THINKING_STEPS = [
     'Analyzing health profile & genetic markers...',
@@ -75,11 +71,14 @@ export default function ChatPage() {
     const [showRightDrawer, setShowRightDrawer] = useState(false)
     const [activeTabRight, setActiveTabRight] = useState<'history' | 'sources'>('history')
     const [searchHistory, setSearchHistory] = useState('')
-    const [evidenceMode, setEvidenceMode] = useState(true)
 
-    // Voice Overlay UI state
+    // REAL Web Speech API & TTS States
     const [isVoiceOpen, setIsVoiceOpen] = useState(false)
     const [voiceState, setVoiceState] = useState<'listening' | 'transcribing' | 'speaking' | 'idle'>('idle')
+    const [liveTranscript, setLiveTranscript] = useState('')
+    const [isSpeaking, setIsSpeaking] = useState(false)
+    const [currentlySpeakingId, setCurrentlySpeakingId] = useState<string | null>(null)
+    const recognitionRef = useRef<any>(null)
 
     // History state
     const [chatSessions, setChatSessions] = useState<ChatSession[]>([
@@ -94,6 +93,14 @@ export default function ChatPage() {
     // On Mount: Load user context without throwing console 400 errors
     useEffect(() => {
         loadUserContext()
+        return () => {
+            if (recognitionRef.current) {
+                try { recognitionRef.current.stop() } catch (e) {}
+            }
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel()
+            }
+        }
     }, [])
 
     // Scroll to bottom on new message
@@ -116,6 +123,147 @@ export default function ChatPage() {
     const triggerToast = (msg: string) => {
         setToastMessage(msg)
         setTimeout(() => setToastMessage(null), 3000)
+    }
+
+    // REAL WEB SPEECH RECOGNITION (Microphone Input)
+    const startVoiceRecognition = () => {
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+        if (!SpeechRecognition) {
+            triggerToast("Browser Speech Recognition is not supported on this browser. Please use Chrome, Edge, or Safari.")
+            return
+        }
+
+        if (recognitionRef.current) {
+            try { recognitionRef.current.stop() } catch (e) {}
+        }
+
+        const recognition = new SpeechRecognition()
+        recognition.continuous = true
+        recognition.interimResults = true
+        recognition.lang = 'en-US'
+
+        recognition.onstart = () => {
+            setVoiceState('listening')
+            setLiveTranscript('')
+            setIsVoiceOpen(true)
+        }
+
+        recognition.onresult = (event: any) => {
+            let currentText = ''
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                currentText += event.results[i][0].transcript
+            }
+            if (currentText.trim()) {
+                setLiveTranscript(currentText)
+                setInput(currentText)
+                setVoiceState('transcribing')
+            }
+        }
+
+        recognition.onerror = (event: any) => {
+            console.warn("Speech recognition error:", event.error)
+            if (event.error === 'not-allowed') {
+                triggerToast("Microphone access denied. Please allow microphone permissions in your browser.")
+                setVoiceState('idle')
+                setIsVoiceOpen(false)
+            }
+        }
+
+        recognition.onend = () => {
+            // Keep state updated
+        }
+
+        recognitionRef.current = recognition
+
+        try {
+            recognition.start()
+        } catch (e) {
+            console.error("Failed to start speech recognition:", e)
+        }
+    }
+
+    const stopVoiceAndSend = () => {
+        if (recognitionRef.current) {
+            try { recognitionRef.current.stop() } catch (e) {}
+        }
+        setIsVoiceOpen(false)
+        setVoiceState('idle')
+        const queryText = liveTranscript.trim() || input.trim()
+        if (queryText) {
+            sendMessage(queryText, true)
+        }
+    }
+
+    const cancelVoice = () => {
+        if (recognitionRef.current) {
+            try { recognitionRef.current.stop() } catch (e) {}
+        }
+        stopSpeech()
+        setIsVoiceOpen(false)
+        setVoiceState('idle')
+        setLiveTranscript('')
+    }
+
+    // REAL TEXT-TO-SPEECH (AI Speech Synthesis)
+    const speakText = (text: string, msgId?: string) => {
+        if (!('speechSynthesis' in window)) {
+            triggerToast("Text-to-speech synthesis not supported in this browser.")
+            return
+        }
+
+        window.speechSynthesis.cancel()
+
+        if (currentlySpeakingId === msgId && isSpeaking) {
+            stopSpeech()
+            return
+        }
+
+        const cleanText = text
+            .replace(/#+/g, '')
+            .replace(/\*+/g, '')
+            .replace(/\[.*?\]\(.*?\)/g, '')
+            .replace(/`{1,3}.*?`{1,3}/g, '')
+            .replace(/<[^>]*>?/gm, '')
+            .trim()
+
+        if (!cleanText) return
+
+        const utterance = new SpeechSynthesisUtterance(cleanText)
+        utterance.rate = 1.05
+        utterance.pitch = 1.0
+
+        const voices = window.speechSynthesis.getVoices()
+        const preferredVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Karen') || v.name.includes('Zira'))) || voices.find(v => v.lang.startsWith('en'))
+        if (preferredVoice) utterance.voice = preferredVoice
+
+        utterance.onstart = () => {
+            setIsSpeaking(true)
+            setVoiceState('speaking')
+            if (msgId) setCurrentlySpeakingId(msgId)
+        }
+
+        utterance.onend = () => {
+            setIsSpeaking(false)
+            setVoiceState('idle')
+            setCurrentlySpeakingId(null)
+        }
+
+        utterance.onerror = () => {
+            setIsSpeaking(false)
+            setVoiceState('idle')
+            setCurrentlySpeakingId(null)
+        }
+
+        window.speechSynthesis.speak(utterance)
+    }
+
+    const stopSpeech = () => {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel()
+        }
+        setIsSpeaking(false)
+        setVoiceState('idle')
+        setCurrentlySpeakingId(null)
     }
 
     // Load user context safely using select('*') to prevent missing column 400 errors
@@ -149,7 +297,7 @@ export default function ChatPage() {
     }
 
     // Send Message Handler
-    const sendMessage = async (overridePrompt?: string) => {
+    const sendMessage = async (overridePrompt?: string, shouldAutoSpeak = false) => {
         const queryText = overridePrompt || input
         if (!queryText.trim() || isLoading) return
 
@@ -161,7 +309,8 @@ export default function ChatPage() {
         }
 
         setMessages(prev => [...prev, userMsg])
-        if (!overridePrompt) setInput('')
+        setInput('')
+        setLiveTranscript('')
         setIsLoading(true)
 
         // API payload preserving existing backend structure 100%
@@ -217,6 +366,10 @@ export default function ChatPage() {
                             return newMsgs
                         })
                     }
+
+                    if (shouldAutoSpeak && responseText) {
+                        speakText(responseText, assistantMsgId)
+                    }
                 }
             } else {
                 let errorMsg = 'Apologies, clinical model request experienced a timeout. Please try again.'
@@ -237,16 +390,6 @@ export default function ChatPage() {
         }
 
         setIsLoading(false)
-    }
-
-    const handleVoiceTrigger = () => {
-        setIsVoiceOpen(true)
-        setVoiceState('listening')
-        setTimeout(() => setVoiceState('transcribing'), 3000)
-        setTimeout(() => {
-            setVoiceState('speaking')
-            setInput('What is the optimal timing for taking Magnesium Glycinate?')
-        }, 5000)
     }
 
     const filteredSessions = useMemo(() => {
@@ -421,11 +564,16 @@ export default function ChatPage() {
                     {/* Right Header Actions */}
                     <div className="flex items-center space-x-2">
                         <button 
-                            onClick={handleVoiceTrigger}
-                            className="hidden sm:flex px-3 py-1.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 text-indigo-400 text-[9px] font-black uppercase tracking-wider transition-all items-center space-x-1.5"
+                            onClick={startVoiceRecognition}
+                            className={cn(
+                                "px-3 py-1.5 rounded-xl border text-[9px] font-black uppercase tracking-wider transition-all items-center space-x-1.5 flex",
+                                isVoiceOpen || isSpeaking 
+                                    ? 'bg-cyan-500 text-black border-cyan-400 animate-pulse' 
+                                    : 'bg-indigo-500/10 border-indigo-500/20 hover:bg-indigo-500/20 text-indigo-400'
+                            )}
                         >
                             <Mic className="w-3.5 h-3.5" />
-                            <span>Voice Mode</span>
+                            <span>{isSpeaking ? 'Speaking Response...' : 'Voice Mode'}</span>
                         </button>
 
                         <button 
@@ -570,12 +718,26 @@ export default function ChatPage() {
                                             {msg.content && (
                                                 <div className="pt-4 border-t border-white/[0.06] flex flex-wrap gap-2 text-[8px] font-black uppercase tracking-wider select-none">
                                                     <button 
+                                                        onClick={() => speakText(msg.content, msg.id)}
+                                                        className={cn(
+                                                            "px-3 py-1.5 rounded-xl border transition-all flex items-center space-x-1",
+                                                            currentlySpeakingId === msg.id && isSpeaking
+                                                                ? 'bg-cyan-500 text-black border-cyan-400 font-black animate-pulse'
+                                                                : 'bg-white/[0.03] border-white/[0.06] hover:bg-white/[0.06] text-slate-300 hover:text-white'
+                                                        )}
+                                                    >
+                                                        {currentlySpeakingId === msg.id && isSpeaking ? <VolumeX className="w-3 h-3 text-black" /> : <Volume2 className="w-3 h-3 text-cyan-400" />}
+                                                        <span>{currentlySpeakingId === msg.id && isSpeaking ? 'Stop Voice' : 'Read Aloud'}</span>
+                                                    </button>
+
+                                                    <button 
                                                         onClick={() => triggerToast('Compound saved to your active stack profile!')}
                                                         className="px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] text-slate-300 hover:text-white transition-all flex items-center space-x-1"
                                                     >
                                                         <Pill className="w-3 h-3 text-cyan-400" />
                                                         <span>Save to Stack</span>
                                                     </button>
+                                                    
                                                     <button 
                                                         onClick={() => triggerToast('Biomarker target added to dashboard monitoring!')}
                                                         className="px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] text-slate-300 hover:text-white transition-all flex items-center space-x-1"
@@ -583,6 +745,7 @@ export default function ChatPage() {
                                                         <FlaskConical className="w-3 h-3 text-purple-400" />
                                                         <span>Track Biomarker</span>
                                                     </button>
+
                                                     <button 
                                                         onClick={() => {
                                                             navigator.clipboard.writeText(msg.content)
@@ -593,6 +756,7 @@ export default function ChatPage() {
                                                         <Copy className="w-3 h-3 text-emerald-400" />
                                                         <span>Copy Answer</span>
                                                     </button>
+
                                                     <button 
                                                         onClick={() => setInput('Explain the biological mechanism of action in detail.')}
                                                         className="px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] text-slate-300 hover:text-white transition-all flex items-center space-x-1"
@@ -660,9 +824,9 @@ export default function ChatPage() {
                                         <Paperclip className="w-4 h-4" />
                                     </button>
                                     <button 
-                                        onClick={handleVoiceTrigger}
-                                        className="p-1.5 rounded-lg hover:bg-white/[0.04] hover:text-cyan-400 transition-all text-slate-400"
-                                        title="Voice Mode Input"
+                                        onClick={startVoiceRecognition}
+                                        className={cn("p-1.5 rounded-lg transition-all", isVoiceOpen ? 'text-cyan-400 bg-cyan-500/10' : 'text-slate-400 hover:text-cyan-400')}
+                                        title="Voice Mode Input (Real Speech Recognition)"
                                     >
                                         <Mic className="w-4 h-4" />
                                     </button>
@@ -771,7 +935,7 @@ export default function ChatPage() {
                 )}
             </AnimatePresence>
 
-            {/* VOICE MODE MODAL OVERLAY */}
+            {/* VOICE MODE MODAL OVERLAY (REAL MIC SPEECH RECOGNITION) */}
             <AnimatePresence>
                 {isVoiceOpen && (
                     <motion.div 
@@ -784,53 +948,62 @@ export default function ChatPage() {
                             initial={{ scale: 0.9, y: 20 }}
                             animate={{ scale: 1, y: 0 }}
                             exit={{ scale: 0.9, y: 20 }}
-                            className="max-w-sm w-full bg-slate-950 border border-cyan-500/30 p-8 rounded-[32px] shadow-2xl text-center space-y-6 relative overflow-hidden select-none"
+                            className="max-w-md w-full bg-slate-950 border border-cyan-500/40 p-8 rounded-[32px] shadow-2xl text-center space-y-6 relative overflow-hidden select-none"
                         >
                             <button 
-                                onClick={() => setIsVoiceOpen(false)}
+                                onClick={cancelVoice}
                                 className="absolute right-4 top-4 text-slate-500 hover:text-white p-1 rounded-lg"
                             >
                                 <X className="w-4 h-4" />
                             </button>
 
                             <div className="space-y-2">
-                                <span className="text-[8px] font-black uppercase tracking-widest text-cyan-400 block">Voice Intelligence Mode</span>
-                                <h3 className="text-sm font-black uppercase tracking-widest text-white">{voiceState}</h3>
+                                <span className="text-[8px] font-black uppercase tracking-widest text-cyan-400 block">Real Voice Intelligence Engine</span>
+                                <h3 className="text-sm font-black uppercase tracking-widest text-white">
+                                    {voiceState === 'listening' ? '🔴 Listening to your voice...' : voiceState === 'transcribing' ? '⚡ Transcribing Speech...' : '🔊 Speaking Response...'}
+                                </h3>
                             </div>
 
                             {/* Animated Audio Visualizer Wave */}
-                            <div className="h-24 flex items-center justify-center space-x-1.5">
-                                {[1, 2, 3, 4, 5, 6, 7, 8].map((bar) => (
+                            <div className="h-20 flex items-center justify-center space-x-2">
+                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((bar) => (
                                     <motion.div 
                                         key={bar}
-                                        className="w-1.5 bg-gradient-to-t from-cyan-500 to-indigo-500 rounded-full"
+                                        className="w-1.5 bg-gradient-to-t from-cyan-500 via-indigo-500 to-purple-500 rounded-full"
                                         animate={{
-                                            height: voiceState === 'listening' ? [12, 48, 16, 64, 20] : [10, 20, 10]
+                                            height: voiceState === 'listening' || voiceState === 'transcribing' 
+                                                ? [12, 56, 20, 64, 16] 
+                                                : [8, 16, 8]
                                         }}
                                         transition={{
-                                            duration: 0.6,
+                                            duration: 0.5,
                                             repeat: Infinity,
-                                            delay: bar * 0.08
+                                            delay: bar * 0.06
                                         }}
                                     />
                                 ))}
                             </div>
 
+                            {/* Live Speech Recognition Transcription Display */}
+                            <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-left space-y-1 min-h-[64px]">
+                                <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block">Live Speech Transcript:</span>
+                                <p className="text-xs font-bold text-cyan-300 leading-relaxed italic">
+                                    {liveTranscript || input || 'Speak clearly into your microphone...'}
+                                </p>
+                            </div>
+
                             <div className="flex space-x-3 text-[9px] font-black uppercase tracking-wider">
                                 <button 
-                                    onClick={() => setIsVoiceOpen(false)}
-                                    className="flex-1 h-10 border border-white/[0.08] hover:border-slate-700 text-white rounded-xl"
+                                    onClick={cancelVoice}
+                                    className="flex-1 h-11 border border-white/[0.08] hover:border-slate-700 text-white rounded-xl"
                                 >
                                     Cancel
                                 </button>
                                 <button 
-                                    onClick={() => {
-                                        setIsVoiceOpen(false)
-                                        sendMessage()
-                                    }}
-                                    className="flex-1 h-10 bg-cyan-500 hover:bg-cyan-400 text-black font-black rounded-xl"
+                                    onClick={stopVoiceAndSend}
+                                    className="flex-1 h-11 bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-black rounded-xl shadow-lg shadow-cyan-500/20"
                                 >
-                                    Done
+                                    Done & Send Query
                                 </button>
                             </div>
                         </motion.div>
