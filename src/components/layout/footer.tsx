@@ -56,28 +56,18 @@ export function Footer() {
             
             <div className="max-w-5xl mx-auto px-6 md:px-8 space-y-12 relative z-10 text-slate-300">
                 
-                {/* CHAPTER 1: Closing Tagline Hero (Breaking the grid: staggered editorial layout) */}
-                <div className="space-y-6 pt-4">
-                    <div className="flex items-center space-x-2 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full w-fit">
-                        <Sparkles className="w-3 h-3 text-blue-400" />
-                        <span className="text-[7px] font-black text-blue-400 uppercase tracking-widest">Diagnostic Node</span>
+                {/* CHAPTER 1: Closing Tagline Hero */}
+                <div className="space-y-4 pt-4">
+                    <div className="flex items-center space-x-2 bg-slate-900 border border-white/[0.08] px-3 py-1 rounded-full w-fit">
+                        <Sparkles className="w-3 h-3 text-cyan-400" />
+                        <span className="text-[7px] font-black text-cyan-400 uppercase tracking-widest">Diagnostic Node</span>
                     </div>
 
-                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                        <div className="space-y-2">
-                            <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest block">SuppSync OS</span>
-                            <h2 className="text-4xl md:text-5xl font-black text-white leading-none uppercase tracking-tight max-w-2xl">
-                                {mounted ? activeTagline : taglines[0]}
-                            </h2>
-                        </div>
-
-                        <a 
-                            href="/chat"
-                            className="w-fit bg-blue-600 hover:bg-blue-500 text-white font-black text-[10px] uppercase h-10 px-5 rounded-xl transition-all duration-300 flex items-center space-x-2 shrink-0 shadow-lg shadow-blue-600/20 cursor-pointer active:scale-95"
-                        >
-                            <span>Consult AI Coach</span>
-                            <ArrowRight className="w-3.5 h-3.5" />
-                        </a>
+                    <div className="space-y-2">
+                        <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest block">SuppSync OS</span>
+                        <h2 className="text-3xl md:text-4xl font-black text-white leading-none uppercase tracking-tight max-w-2xl">
+                            {mounted ? activeTagline : taglines[0]}
+                        </h2>
                     </div>
                 </div>
 

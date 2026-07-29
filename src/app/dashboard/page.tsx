@@ -22,25 +22,21 @@ import { SupplementTimeline } from '@/components/dashboard/supplement-timeline'
 import { MoodLogger } from '@/components/dashboard/mood-logger'
 import { SmartRecs } from '@/components/dashboard/smart-recs'
 import { HandfulScanner } from '@/components/dashboard/handful-scanner'
+import { SyncbotAiSection } from '@/components/dashboard/syncbot-ai-section'
 import { Flame, BarChart3, MessageCircle, Target, Sun, Moon, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 
 import { useEffect, useState, useRef } from 'react'
 
-// Basic chronobiology calculations (approximate based on rough lat/long or defaulting to 6am/6pm if unavailable)
-// A robust V10 would use a geolocation API, but for this demo we'll simulate standard solar events.
 const getSolarTimes = () => {
     const now = new Date();
     
-    // Simulate Sunrise at 6:30 AM
     const sunrise = new Date(now);
     sunrise.setHours(6, 30, 0, 0);
     
-    // Simulate Solar Noon at 12:15 PM
     const solarNoon = new Date(now);
     solarNoon.setHours(12, 15, 0, 0);
 
-    // Simulate Sunset at 7:45 PM
     const sunset = new Date(now);
     sunset.setHours(19, 45, 0, 0);
 
@@ -59,14 +55,14 @@ export default function DashboardPage() {
     const [lowStockAlerts, setLowStockAlerts] = useState<InventoryAlertItem[]>([])
     const [heatmapData, setHeatmapData] = useState<AdherenceData[]>([])
     const [correlationData, setCorrelationData] = useState<CorrelationData[]>([])
-    const [hasCheckedInToday, setHasCheckedInToday] = useState(true) // Default true to hide flash
+    const [hasCheckedInToday, setHasCheckedInToday] = useState(true)
     const [userId, setUserId] = useState<string | null>(null)
     const [budgetItems, setBudgetItems] = useState<BudgetItem[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const schedulesRef = useRef<any[]>([])
 
     const date = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
-    const todayStr = new Date().toLocaleDateString('en-CA') // YYYY-MM-DD
+    const todayStr = new Date().toLocaleDateString('en-CA')
 
     useEffect(() => {
         async function fetchLogs() {
@@ -74,14 +70,12 @@ export default function DashboardPage() {
             if (!user) return
             setUserId(user.id)
 
-            // 1. Fetch active schedules joined with supplements (including cycle and solar fields)
             const { data: schedules } = await supabase
                 .from('schedules')
                 .select('id, dosage_amount, dosage_unit, time_of_day, trigger_type, offset_mins, cycle_on_days, cycle_off_days, cycle_start_date, supplements(id, name, color_hex)')
                 .eq('user_id', user.id)
                 .eq('is_active', true)
 
-            // 2. Fetch today's logs for those schedules
             const { data: logs } = await supabase
                 .from('logs')
                 .select('id, schedule_id, status')
@@ -93,18 +87,16 @@ export default function DashboardPage() {
                     const supplement = Array.isArray(sched.supplements) ? sched.supplements[0] : sched.supplements
                     const logForSchedule = logs?.find(l => l.schedule_id === sched.id)
 
-                    // Calculate washout status for cycling supplements
                     let isWashout = false
                     if (sched.cycle_on_days && sched.cycle_off_days && sched.cycle_start_date) {
                         const startDate = new Date(sched.cycle_start_date)
                         const today = new Date(todayStr)
                         const daysSinceStart = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
                         const cycleLength = sched.cycle_on_days + sched.cycle_off_days
-                        const dayInCycle = ((daysSinceStart % cycleLength) + cycleLength) % cycleLength // Handle negative modulo
+                        const dayInCycle = ((daysSinceStart % cycleLength) + cycleLength) % cycleLength
                         isWashout = dayInCycle >= sched.cycle_on_days
                     }
 
-                    // Chronobiology Timing (V10)
                     const solarTimes = getSolarTimes();
                     let timingDisplay = sched.time_of_day || 'Anytime'
                     let isSolar = false
@@ -141,7 +133,6 @@ export default function DashboardPage() {
                 schedulesRef.current = schedules
             }
 
-            // 3. Fetch low stock inventory
             const { data: inventoryItems } = await supabase
                 .from('inventory')
                 .select('id, amount_remaining, total_capacity, unit, low_stock_threshold, cost_per_bottle, currency, supplements(id, name, reorder_url)')
@@ -163,13 +154,11 @@ export default function DashboardPage() {
                 setLowStockAlerts(alerts)
             }
 
-            // 3b. Calculate budget items from inventory with cost data
             if (inventoryItems && schedules) {
                 const budgetData: BudgetItem[] = (inventoryItems as any[])
                     .filter((inv: any) => inv.cost_per_bottle && inv.total_capacity)
                     .map((inv: any) => {
                         const supp = Array.isArray(inv.supplements) ? inv.supplements[0] : inv.supplements
-                        // Find matching schedule to get dosage
                         const matchingSched = (schedules as any[]).find((s: any) => {
                             const schedSupp = Array.isArray(s.supplements) ? s.supplements[0] : s.supplements
                             return schedSupp?.id === supp?.id
@@ -188,7 +177,6 @@ export default function DashboardPage() {
                 setBudgetItems(budgetData)
             }
 
-            // 4. Crunch data for the Heatmap (Last 28 days)
             if (schedules && schedules.length > 0) {
                 const twentyEightDaysAgo = new Date()
                 twentyEightDaysAgo.setDate(twentyEightDaysAgo.getDate() - 28)
@@ -201,9 +189,8 @@ export default function DashboardPage() {
                     .gte('log_date', startDateStr)
                     .eq('status', 'taken')
 
-                const totalActiveSchedules = schedules.length // baseline for 100% adherence
+                const totalActiveSchedules = schedules.length
 
-                // Create a map of date -> taken count
                 const logsByDate = (pastLogs || []).reduce((acc: any, log: any) => {
                     acc[log.log_date] = (acc[log.log_date] || 0) + 1
                     return acc
@@ -212,7 +199,6 @@ export default function DashboardPage() {
                 const adherenceArray: AdherenceData[] = []
                 const corrArray: CorrelationData[] = []
 
-                // Fetch past subjective scores
                 const { data: pastScores } = await supabase
                     .from('subjective_scores')
                     .select('record_date, energy_score')
@@ -248,7 +234,6 @@ export default function DashboardPage() {
                 setCorrelationData(corrArray)
             }
 
-            // 5. Check if user already submitted subjective scores today
             const { data: subjectiveScore } = await supabase
                 .from('subjective_scores')
                 .select('id')
@@ -266,11 +251,9 @@ export default function DashboardPage() {
     const completed = todayLogs.filter(log => log.taken).length
     const total = todayLogs.length
 
-    // Calculate live streak from heatmap data (consecutive days with >0% adherence, going backwards)
     const streak = (() => {
         if (heatmapData.length === 0) return 0
         let count = 0
-        // Start from the most recent day and go backwards
         const sorted = [...heatmapData].sort((a, b) => b.date.localeCompare(a.date))
         for (const day of sorted) {
             if (day.percentage > 0) {
@@ -282,7 +265,6 @@ export default function DashboardPage() {
         return count
     })()
 
-    // Confetti trigger: fire when all are taken and there's at least 1
     const [confettiTrigger, setConfettiTrigger] = useState(false)
     const prevCompleted = useRef(completed)
     useEffect(() => {
@@ -293,7 +275,6 @@ export default function DashboardPage() {
         prevCompleted.current = completed
     }, [completed, total])
 
-    // Refresh only the log statuses (for voice logger sync)
     const refreshLogs = async () => {
         const { data: logs } = await supabase
             .from('logs')
@@ -336,10 +317,8 @@ export default function DashboardPage() {
 
     return (
         <div className="flex min-h-screen flex-col items-center pt-8 pb-32">
-            {/* Confetti overlay */}
             <ConfettiBurst trigger={confettiTrigger} />
 
-            {/* Header section (Date + Streak) */}
             <div className="w-full px-4 flex justify-between items-end mb-8">
                 <div>
                     <p className="text-slate-400 text-xs font-bold tracking-widest uppercase">{date}</p>
@@ -363,28 +342,21 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            {/* Fully Responsive Grid Layout */}
             <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-6 items-start px-2">
                 
                 {/* Column 1: XP, Check-in, Mood, Challenges, Zen, Vision Scanner */}
                 <div className="md:col-span-4 space-y-6">
-                    {/* XP Bar */}
                     <XpBar />
 
-                    {/* Daily Subjective Check-in (Only visible if not submitted today) */}
                     {!isLoading && !hasCheckedInToday && userId && (
                         <div className="w-full px-4">
                             <DailyCheckIn userId={userId} currentDate={todayStr} />
                         </div>
                     )}
 
-                    {/* Mood Logger */}
                     <MoodLogger />
-
-                    {/* Daily Challenge */}
                     <DailyChallenge />
 
-                    {/* Zen Mode Button */}
                     <div className="w-full px-4">
                         <Link href="/routine" className="block w-full">
                             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-3xl p-5 flex items-center justify-between shadow-[0_0_25px_rgba(59,130,246,0.25)] transition-all">
@@ -404,12 +376,10 @@ export default function DashboardPage() {
                         </Link>
                     </div>
 
-                    {/* V10: Vision AI Handful Scanner */}
                     <div className="w-full px-4">
                         <HandfulScanner onLogsCompleted={refreshLogs} />
                     </div>
 
-                    {/* Streak Freeze */}
                     {!isLoading && userId && (
                         <div className="w-full px-4">
                             <StreakFreeze currentStreak={streak} userId={userId} />
@@ -419,50 +389,34 @@ export default function DashboardPage() {
 
                 {/* Column 2: Progress Ring, Timeline, Today's Checklist */}
                 <div className="md:col-span-4 space-y-6">
-                    {/* Main Progress Ring */}
                     <ProgressRing completed={completed} total={total} />
-
-                    {/* Supplement Timeline */}
                     <SupplementTimeline />
-
-                    {/* The Checklist */}
                     <DailyChecklist logs={todayLogs} setLogs={setTodayLogs} dateStr={todayStr} />
                 </div>
 
                 {/* Column 3: Stock/Expiry Alerts, Weekly Report, recommendations, heatmaps, budget */}
                 <div className="md:col-span-4 space-y-6">
-                    {/* Restock Alerts */}
                     <InventoryAlerts alerts={lowStockAlerts} />
-
-                    {/* Expiry Alerts */}
                     <ExpiryAlerts />
-
-                    {/* Weekly AI Report */}
                     <WeeklyReport />
-
-                    {/* Smart Recommendations */}
                     <SmartRecs />
-
-                    {/* Consistency Heatmap */}
                     <ConsistencyHeatmap data={heatmapData} />
 
-                    {/* AI Correlation Graph */}
                     {!isLoading && correlationData.length > 0 && (
                         <CorrelationChart data={correlationData} />
                     )}
 
-                    {/* Budget Widget */}
                     {!isLoading && budgetItems.length > 0 && (
                         <BudgetWidget items={budgetItems} />
                     )}
 
-                    {/* Smart Timing Optimizer */}
                     <SmartTimingOptimizer />
-
-                    {/* Log Workout */}
                     <LogWorkout />
                 </div>
             </div>
+
+            {/* Dedicated SyncBot AI 4.0 Section */}
+            <SyncbotAiSection />
 
             {/* Voice Logger FAB */}
             <VoiceLogger onLogUpdate={refreshLogs} />
