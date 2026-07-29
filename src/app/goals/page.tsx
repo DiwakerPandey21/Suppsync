@@ -44,7 +44,9 @@ const GOAL_TEMPLATES = [
     { title: 'Daily 3.5L Hydration Challenge', category: 'hydration', target: 30, xp: '+300 XP', tag: 'Wellness' },
     { title: 'High-Protein Intake Protocol (160g+)', category: 'nutrition', target: 30, xp: '+600 XP', tag: 'Nutrition' },
     { title: 'Nootropic Mental Focus Routine', category: 'focus', target: 21, xp: '+450 XP', tag: 'Cognitive' },
-    { title: 'Unbroken 30-Day Supplement Streak', category: 'consistency', target: 30, xp: '+1000 XP', tag: 'Mastery' }
+    { title: 'Unbroken 30-Day Supplement Streak', category: 'consistency', target: 30, xp: '+1000 XP', tag: 'Mastery' },
+    { title: '5-Day Hypertrophy Workout Split', category: 'muscle', target: 20, xp: '+700 XP', tag: 'Fitness' },
+    { title: 'Morning Solar Sunlight Exposure (15m)', category: 'health', target: 30, xp: '+400 XP', tag: 'Hormones' }
 ]
 
 const BADGES = [
@@ -75,14 +77,13 @@ export default function GoalsPage() {
     const [confettiTrigger, setConfettiTrigger] = useState(false)
     const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('all')
 
-    // Daily Checklist State
     const [dailyTasks, setDailyTasks] = useState([
         { id: 'water', label: 'Drink 3.5L Water with Electrolytes', done: false, xp: 50 },
         { id: 'protein', label: 'Hit 160g Protein Target', done: true, xp: 100 },
         { id: 'supps', label: 'Log Morning & Night Stack', done: true, xp: 100 },
         { id: 'workout', label: 'Complete Resistance Session', done: false, xp: 150 },
         { id: 'sleep', label: '8 Hours Sleep & Night Magnesium', done: true, xp: 100 },
-        { id: 'sunlight', label: '15 Mins Morning Sunlight', done: false, xp: 50 }
+        { id: 'sunlight', label: '15 Mins Morning Sunlight Exposure', done: false, xp: 50 }
     ])
 
     useEffect(() => { load() }, [])
@@ -163,7 +164,6 @@ export default function GoalsPage() {
 
     const totalGoals = goals.length
     const completedGoals = goals.filter(g => (g.current_value / g.target_value) >= 1).length
-    const overallCompletionPct = totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0
     const dailyDoneCount = dailyTasks.filter(t => t.done).length
     const dailyPct = Math.round((dailyDoneCount / dailyTasks.length) * 100)
 
@@ -173,64 +173,73 @@ export default function GoalsPage() {
     }, [goals, selectedCategoryFilter])
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 pb-32 px-4 sm:px-8 select-none">
+        <div className="min-h-screen bg-slate-950 text-slate-100 pb-32 px-4 sm:px-8 lg:px-12 select-none">
             <ConfettiBurst trigger={confettiTrigger} />
 
-            <div className="max-w-7xl mx-auto space-y-10 pt-6">
+            {/* WIDESCREEN CONTAINER (1600px Max Desktop Canvas) */}
+            <div className="max-w-[1600px] w-full mx-auto space-y-8 pt-6">
 
                 {/* NAVIGATION HEADER */}
-                <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
-                    <Link href="/dashboard" className="inline-flex items-center space-x-2 text-xs font-bold text-slate-400 hover:text-white transition-colors">
-                        <ArrowLeft className="w-4 h-4" />
-                        <span>Back to Dashboard</span>
-                    </Link>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-4">
+                    <div className="flex items-center space-x-3">
+                        <Link href="/dashboard" className="p-2 rounded-xl bg-slate-900 border border-white/10 text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+                            <ArrowLeft className="w-4 h-4" />
+                        </Link>
+                        <div>
+                            <div className="flex items-center space-x-2">
+                                <Target className="w-5 h-5 text-emerald-400" />
+                                <h1 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight">Goals OS 3.1</h1>
+                            </div>
+                            <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-medium">Personal Health Journey & Goal Mission Control</span>
+                        </div>
+                    </div>
 
                     <Button 
                         onClick={() => setShowAdd(!showAdd)} 
                         size="sm" 
-                        className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20"
+                        className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/20 cursor-pointer"
                     >
                         <Plus className="w-4 h-4 mr-1" /> New Health Goal
                     </Button>
                 </div>
 
-                {/* HERO SECTION */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-gradient-to-br from-slate-950 via-[#041d14] to-slate-950 p-6 sm:p-8 rounded-3xl border border-emerald-500/20 relative overflow-hidden shadow-2xl">
-                    <div className="space-y-3 max-w-2xl">
-                        <div className="inline-flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full text-emerald-400 text-[9px] font-black uppercase tracking-widest">
-                            <Target className="w-3.5 h-3.5" />
-                            <span>Goals OS 3.0</span>
+                {/* HERO SECTION & 4 KPI METRIC STRIP */}
+                <div className="space-y-4">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-gradient-to-r from-slate-950 via-[#041d14] to-slate-950 p-6 sm:p-8 rounded-3xl border border-emerald-500/20 relative overflow-hidden shadow-2xl">
+                        <div className="space-y-2 max-w-3xl">
+                            <div className="inline-flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full text-emerald-400 text-[9px] font-black uppercase tracking-widest">
+                                <Target className="w-3.5 h-3.5" />
+                                <span>Health Mission Control</span>
+                            </div>
+                            <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight uppercase">
+                                Your Personal Health Journey
+                            </h2>
+                            <p className="text-xs sm:text-sm text-slate-400 font-medium leading-relaxed">
+                                Small, consistent daily improvements create extraordinary long-term strength, longevity, and cognitive peak performance.
+                            </p>
                         </div>
 
-                        <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight uppercase">
-                            Your Health Journey
-                        </h1>
-
-                        <p className="text-xs sm:text-sm text-slate-400 font-medium leading-relaxed">
-                            Small, consistent daily improvements build extraordinary long-term longevity, strength, and cognitive peak performance.
-                        </p>
-                    </div>
-
-                    {/* HERO PROGRESS TILES */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 shrink-0">
-                        {[
-                            { label: 'Completed Goals', val: `${completedGoals} / ${totalGoals}`, sub: 'Active Targets', color: 'text-emerald-400' },
-                            { label: "Today's Targets", val: `${dailyPct}%`, sub: `${dailyDoneCount}/${dailyTasks.length} Completed`, color: 'text-cyan-400' },
-                            { label: 'Active Streak', val: '14 Days', sub: 'Unbroken Record', color: 'text-amber-400' },
-                            { label: 'Biohacker Rank', val: 'Master Tier', sub: 'Level 14 • 4,200 XP', color: 'text-indigo-400' }
-                        ].map((tile, i) => (
-                            <div key={i} className="p-3.5 rounded-2xl bg-slate-900/80 border border-white/[0.06] space-y-1">
-                                <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block">{tile.label}</span>
-                                <span className={cn("text-base sm:text-lg font-black block tracking-tight", tile.color)}>{tile.val}</span>
-                                <span className="text-[8px] font-bold text-slate-400 block">{tile.sub}</span>
-                            </div>
-                        ))}
+                        {/* 4 WIDESCREEN KPI TILES */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 shrink-0">
+                            {[
+                                { label: 'Completed Goals', val: `${completedGoals} / ${totalGoals}`, sub: 'Active Targets', color: 'text-emerald-400' },
+                                { label: "Today's Targets", val: `${dailyPct}%`, sub: `${dailyDoneCount}/${dailyTasks.length} Completed`, color: 'text-cyan-400' },
+                                { label: 'Active Streak', val: '14 Days', sub: 'Unbroken Record', color: 'text-amber-400' },
+                                { label: 'Biohacker Rank', val: 'Master Tier', sub: 'Level 14 • 4,200 XP', color: 'text-indigo-400' }
+                            ].map((tile, i) => (
+                                <div key={i} className="p-3.5 rounded-2xl bg-slate-900/80 border border-white/[0.06] space-y-1">
+                                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block">{tile.label}</span>
+                                    <span className={cn("text-base sm:text-lg font-black block tracking-tight", tile.color)}>{tile.val}</span>
+                                    <span className="text-[8px] font-bold text-slate-400 block">{tile.sub}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
                 {/* FEATURED ACTIVE MISSION SPOTLIGHT */}
                 <div className="p-6 sm:p-8 rounded-3xl bg-slate-950/90 border border-emerald-500/30 backdrop-blur-xl relative overflow-hidden space-y-4 shadow-xl">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-3">
                         <div className="flex items-center space-x-3">
                             <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
                                 <Trophy className="w-5 h-5" />
@@ -259,7 +268,7 @@ export default function GoalsPage() {
                         </div>
                     </div>
 
-                    <div className="pt-2 flex items-center space-x-2 text-[10px] text-slate-300">
+                    <div className="pt-1 flex items-center space-x-2 text-[10px] text-slate-300">
                         <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                         <span><strong>AI Goal Coach:</strong> "You've completed 72% of this protocol. Completing your evening Magnesium Glycinate log keeps your streak active!"</span>
                     </div>
@@ -329,11 +338,11 @@ export default function GoalsPage() {
                     )}
                 </AnimatePresence>
 
-                {/* DAILY CHECKLIST & PROGRESS RINGS */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* 2-COLUMN DESKTOP CORE SECTION: CHECKLIST + ROADMAP */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-                    {/* DAILY TARGET CHECKLIST */}
-                    <div className="lg:col-span-7 p-6 rounded-3xl bg-slate-950/80 border border-white/[0.08] space-y-4 shadow-xl">
+                    {/* LEFT (7/12): DAILY TARGET CHECKLIST */}
+                    <div className="lg:col-span-7 p-6 sm:p-8 rounded-3xl bg-slate-950/80 border border-white/[0.08] space-y-4 shadow-xl">
                         <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
                             <div className="flex items-center space-x-2">
                                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -342,7 +351,7 @@ export default function GoalsPage() {
                             <span className="text-xs font-black text-emerald-400">{dailyDoneCount} of {dailyTasks.length} Done ({dailyPct}%)</span>
                         </div>
 
-                        <div className="space-y-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {dailyTasks.map(task => (
                                 <div 
                                     key={task.id}
@@ -354,14 +363,14 @@ export default function GoalsPage() {
                                             : "bg-slate-900/50 border-white/[0.04] text-slate-400 hover:border-white/20 hover:text-slate-200"
                                     )}
                                 >
-                                    <div className="flex items-center space-x-3">
-                                        <div className={cn("w-5 h-5 rounded-lg border flex items-center justify-center transition-colors", task.done ? "bg-emerald-500 border-emerald-500 text-slate-950" : "border-slate-700")}>
-                                            {task.done && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                    <div className="flex items-center space-x-2.5">
+                                        <div className={cn("w-4 h-4 rounded-lg border flex items-center justify-center transition-colors shrink-0", task.done ? "bg-emerald-500 border-emerald-500 text-slate-950" : "border-slate-700")}>
+                                            {task.done && <Check className="w-3 h-3 stroke-[3]" />}
                                         </div>
-                                        <span className={cn("text-xs font-bold", task.done && "line-through opacity-70")}>{task.label}</span>
+                                        <span className={cn("text-[11px] font-bold line-clamp-1", task.done && "line-through opacity-70")}>{task.label}</span>
                                     </div>
 
-                                    <span className="text-[9px] font-black uppercase text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                                    <span className="text-[8px] font-black uppercase text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 shrink-0">
                                         +{task.xp} XP
                                     </span>
                                 </div>
@@ -369,26 +378,26 @@ export default function GoalsPage() {
                         </div>
                     </div>
 
-                    {/* PROGRESS RINGS & ROADMAP */}
-                    <div className="lg:col-span-5 p-6 rounded-3xl bg-slate-950/80 border border-white/[0.08] space-y-6 shadow-xl flex flex-col justify-between">
-                        <div className="space-y-1 border-b border-white/[0.06] pb-3">
-                            <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block">Milestone Roadmap</span>
-                            <h3 className="text-sm font-black text-white uppercase tracking-wider">Health Journey Stages</h3>
+                    {/* RIGHT (5/12): ROADMAP & BIOHACKER RANK */}
+                    <div className="lg:col-span-5 p-6 sm:p-8 rounded-3xl bg-slate-950/80 border border-white/[0.08] space-y-4 shadow-xl">
+                        <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+                            <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block">Milestone Journey</span>
+                            <h3 className="text-sm font-black text-white uppercase tracking-wider">Roadmap Stages</h3>
                         </div>
 
-                        <div className="space-y-3 text-xs">
+                        <div className="space-y-2 text-xs">
                             {[
-                                { stage: 'Week 1: Adaptation', status: 'Completed', detail: 'Supplement stack timing calibrated.', color: 'text-emerald-400' },
-                                { stage: 'Week 2: Bio-Synergy', status: 'Active', detail: 'Biomarker levels stabilizing.', color: 'text-cyan-400' },
+                                { stage: 'Week 1: Adaptation', status: 'Completed', detail: 'Supplement timing calibrated.', color: 'text-emerald-400' },
+                                { stage: 'Week 2: Bio-Synergy', status: 'Active Protocol', detail: 'Biomarker levels stabilizing.', color: 'text-cyan-400' },
                                 { stage: 'Week 3: Peak BioScore', status: 'Upcoming', detail: 'NREM sleep & HRV optimization.', color: 'text-slate-500' },
                                 { stage: 'Month 2: Longevity Mastery', status: 'Locked', detail: 'Full routine automation.', color: 'text-slate-500' }
                             ].map((s, idx) => (
-                                <div key={idx} className="p-3 rounded-2xl bg-slate-900/60 border border-white/[0.04] flex items-center justify-between">
+                                <div key={idx} className="p-2.5 rounded-2xl bg-slate-900/60 border border-white/[0.04] flex items-center justify-between">
                                     <div>
-                                        <span className="text-xs font-black text-white block">{s.stage}</span>
+                                        <span className="text-[11px] font-black text-white block">{s.stage}</span>
                                         <span className="text-[9px] text-slate-400 block">{s.detail}</span>
                                     </div>
-                                    <span className={cn("text-[9px] font-black uppercase tracking-wider", s.color)}>{s.status}</span>
+                                    <span className={cn("text-[8px] font-black uppercase tracking-wider", s.color)}>{s.status}</span>
                                 </div>
                             ))}
                         </div>
@@ -396,7 +405,7 @@ export default function GoalsPage() {
 
                 </div>
 
-                {/* 1-CLICK READY-MADE GOAL TEMPLATES */}
+                {/* 1-CLICK READY-MADE GOAL TEMPLATES (4-COLUMN DESKTOP GRID) */}
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div>
@@ -406,19 +415,18 @@ export default function GoalsPage() {
                         <span className="text-[9px] font-bold text-slate-400">Click to activate instantly</span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {GOAL_TEMPLATES.map((tmpl, idx) => (
                             <div 
                                 key={idx}
-                                className="p-5 rounded-2xl bg-slate-950/60 border border-white/[0.06] hover:border-emerald-500/30 transition-all space-y-3 group"
+                                className="p-5 rounded-2xl bg-slate-950/60 border border-white/[0.06] hover:border-emerald-500/30 transition-all space-y-3 group flex flex-col justify-between"
                             >
-                                <div className="flex justify-between items-center">
-                                    <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 tracking-widest">{tmpl.tag}</span>
-                                    <span className="text-[9px] font-black text-amber-400">{tmpl.xp}</span>
-                                </div>
-
-                                <div>
-                                    <h4 className="text-xs font-black text-white uppercase tracking-wider group-hover:text-emerald-300 transition-colors">{tmpl.title}</h4>
+                                <div className="space-y-2">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 tracking-widest">{tmpl.tag}</span>
+                                        <span className="text-[9px] font-black text-amber-400">{tmpl.xp}</span>
+                                    </div>
+                                    <h4 className="text-xs font-black text-white uppercase tracking-wider group-hover:text-emerald-300 transition-colors line-clamp-2">{tmpl.title}</h4>
                                 </div>
 
                                 <button 
@@ -433,7 +441,7 @@ export default function GoalsPage() {
                     </div>
                 </div>
 
-                {/* ACTIVE GOALS CARDS */}
+                {/* ACTIVE GOALS CARDS (4-COLUMN DESKTOP GRID) */}
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div>
@@ -441,7 +449,6 @@ export default function GoalsPage() {
                             <h3 className="text-xl font-black text-white uppercase tracking-tight">Your Active Targets</h3>
                         </div>
 
-                        {/* Category filter */}
                         <div className="flex bg-slate-900 p-1 rounded-xl text-[9px] font-black uppercase">
                             <button 
                                 onClick={() => setSelectedCategoryFilter('all')}
@@ -455,7 +462,6 @@ export default function GoalsPage() {
                     {isLoading ? (
                         <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-slate-500" /></div>
                     ) : filteredGoals.length === 0 ? (
-                        /* BEAUTIFUL RICH EMPTY STATE */
                         <div className="p-8 rounded-3xl bg-slate-950/80 border border-white/[0.08] text-center space-y-4">
                             <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mx-auto">
                                 <Target className="w-6 h-6" />
@@ -469,7 +475,7 @@ export default function GoalsPage() {
                             </Button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                             {filteredGoals.map((goal, i) => {
                                 const cat = getCatMeta(goal.category)
                                 const pct = Math.round((goal.current_value / goal.target_value) * 100)
@@ -538,7 +544,7 @@ export default function GoalsPage() {
                     )}
                 </div>
 
-                {/* ACHIEVEMENTS & BADGES SYSTEM */}
+                {/* ACHIEVEMENTS & BADGES SYSTEM (6-COLUMN DESKTOP) */}
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div>
@@ -581,7 +587,7 @@ export default function GoalsPage() {
                     </div>
                 </div>
 
-                {/* COMMUNITY CHALLENGES */}
+                {/* COMMUNITY CHALLENGES (4-COLUMN DESKTOP) */}
                 <div className="p-6 sm:p-8 rounded-3xl bg-slate-950/80 border border-white/[0.08] space-y-6 shadow-2xl">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/[0.06] pb-4">
                         <div>
@@ -605,7 +611,7 @@ export default function GoalsPage() {
 
                                 <button 
                                     onClick={() => addGoal(ch.title, 'consistency', 14)}
-                                    className="w-full py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500 hover:text-slate-950 border border-cyan-500/20 text-cyan-300 text-[9px] font-black uppercase tracking-wider transition-all"
+                                    className="w-full py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500 hover:text-slate-950 border border-cyan-500/20 text-cyan-300 text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer"
                                 >
                                     Join Challenge
                                 </button>
