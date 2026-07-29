@@ -173,24 +173,24 @@ export default function GoalsPage() {
     }, [goals, selectedCategoryFilter])
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 pb-32 px-4 sm:px-8 lg:px-12 select-none">
+        <div className="min-h-screen bg-slate-950 text-slate-100 pb-32 px-4 sm:px-8 md:px-12 lg:px-16 w-full max-w-none select-none">
             <ConfettiBurst trigger={confettiTrigger} />
 
-            {/* WIDESCREEN CONTAINER (1600px Max Desktop Canvas) */}
-            <div className="max-w-[1600px] w-full mx-auto space-y-8 pt-6">
+            {/* 100% EDGE-TO-EDGE FULL-WIDTH CANVAS */}
+            <div className="w-full space-y-8 pt-6">
 
                 {/* NAVIGATION HEADER */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-4 w-full">
                     <div className="flex items-center space-x-3">
-                        <Link href="/dashboard" className="p-2 rounded-xl bg-slate-900 border border-white/10 text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+                        <Link href="/dashboard" className="p-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
                             <ArrowLeft className="w-4 h-4" />
                         </Link>
                         <div>
                             <div className="flex items-center space-x-2">
-                                <Target className="w-5 h-5 text-emerald-400" />
-                                <h1 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight">Goals OS 3.1</h1>
+                                <Target className="w-6 h-6 text-emerald-400" />
+                                <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">Goals OS 3.1</h1>
                             </div>
-                            <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-medium">Personal Health Journey & Goal Mission Control</span>
+                            <span className="text-xs text-slate-500 uppercase tracking-widest block font-medium">Personal Health Journey & Goal Mission Control</span>
                         </div>
                     </div>
 
@@ -204,14 +204,14 @@ export default function GoalsPage() {
                 </div>
 
                 {/* HERO SECTION & 4 KPI METRIC STRIP */}
-                <div className="space-y-4">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-gradient-to-r from-slate-950 via-[#041d14] to-slate-950 p-6 sm:p-8 rounded-3xl border border-emerald-500/20 relative overflow-hidden shadow-2xl">
-                        <div className="space-y-2 max-w-3xl">
+                <div className="space-y-4 w-full">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-gradient-to-r from-slate-950 via-[#041d14] to-slate-950 p-6 sm:p-8 rounded-3xl border border-emerald-500/20 relative overflow-hidden shadow-2xl w-full">
+                        <div className="space-y-2 max-w-4xl">
                             <div className="inline-flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full text-emerald-400 text-[9px] font-black uppercase tracking-widest">
                                 <Target className="w-3.5 h-3.5" />
                                 <span>Health Mission Control</span>
                             </div>
-                            <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight uppercase">
+                            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight uppercase">
                                 Your Personal Health Journey
                             </h2>
                             <p className="text-xs sm:text-sm text-slate-400 font-medium leading-relaxed">
@@ -220,17 +220,17 @@ export default function GoalsPage() {
                         </div>
 
                         {/* 4 WIDESCREEN KPI TILES */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 shrink-0">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 shrink-0">
                             {[
                                 { label: 'Completed Goals', val: `${completedGoals} / ${totalGoals}`, sub: 'Active Targets', color: 'text-emerald-400' },
                                 { label: "Today's Targets", val: `${dailyPct}%`, sub: `${dailyDoneCount}/${dailyTasks.length} Completed`, color: 'text-cyan-400' },
                                 { label: 'Active Streak', val: '14 Days', sub: 'Unbroken Record', color: 'text-amber-400' },
                                 { label: 'Biohacker Rank', val: 'Master Tier', sub: 'Level 14 • 4,200 XP', color: 'text-indigo-400' }
                             ].map((tile, i) => (
-                                <div key={i} className="p-3.5 rounded-2xl bg-slate-900/80 border border-white/[0.06] space-y-1">
-                                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block">{tile.label}</span>
-                                    <span className={cn("text-base sm:text-lg font-black block tracking-tight", tile.color)}>{tile.val}</span>
-                                    <span className="text-[8px] font-bold text-slate-400 block">{tile.sub}</span>
+                                <div key={i} className="p-4 rounded-2xl bg-slate-900/80 border border-white/[0.06] space-y-1">
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 block">{tile.label}</span>
+                                    <span className={cn("text-lg sm:text-xl font-black block tracking-tight", tile.color)}>{tile.val}</span>
+                                    <span className="text-[10px] font-bold text-slate-400 block">{tile.sub}</span>
                                 </div>
                             ))}
                         </div>
@@ -238,15 +238,15 @@ export default function GoalsPage() {
                 </div>
 
                 {/* FEATURED ACTIVE MISSION SPOTLIGHT */}
-                <div className="p-6 sm:p-8 rounded-3xl bg-slate-950/90 border border-emerald-500/30 backdrop-blur-xl relative overflow-hidden space-y-4 shadow-xl">
+                <div className="p-6 sm:p-8 rounded-3xl bg-slate-950/90 border border-emerald-500/30 backdrop-blur-xl relative overflow-hidden space-y-4 shadow-xl w-full">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-3">
                         <div className="flex items-center space-x-3">
                             <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
                                 <Trophy className="w-5 h-5" />
                             </div>
                             <div>
-                                <span className="text-xs font-black uppercase tracking-widest text-white block">Featured Mission Protocol</span>
-                                <span className="text-[9px] text-slate-500 uppercase tracking-widest block">30-Day Hypertrophy & Stack Optimization</span>
+                                <span className="text-sm font-black uppercase tracking-widest text-white block">Featured Mission Protocol</span>
+                                <span className="text-[10px] text-slate-500 uppercase tracking-widest block">30-Day Hypertrophy & Stack Optimization</span>
                             </div>
                         </div>
 
@@ -268,8 +268,8 @@ export default function GoalsPage() {
                         </div>
                     </div>
 
-                    <div className="pt-1 flex items-center space-x-2 text-[10px] text-slate-300">
-                        <Sparkles className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                    <div className="pt-1 flex items-center space-x-2 text-xs text-slate-300">
+                        <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
                         <span><strong>AI Goal Coach:</strong> "You've completed 72% of this protocol. Completing your evening Magnesium Glycinate log keeps your streak active!"</span>
                     </div>
                 </div>
@@ -339,38 +339,38 @@ export default function GoalsPage() {
                 </AnimatePresence>
 
                 {/* 2-COLUMN DESKTOP CORE SECTION: CHECKLIST + ROADMAP */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start w-full">
 
                     {/* LEFT (7/12): DAILY TARGET CHECKLIST */}
-                    <div className="lg:col-span-7 p-6 sm:p-8 rounded-3xl bg-slate-950/80 border border-white/[0.08] space-y-4 shadow-xl">
+                    <div className="xl:col-span-7 p-6 sm:p-8 rounded-3xl bg-slate-950/80 border border-white/[0.08] space-y-4 shadow-xl">
                         <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
                             <div className="flex items-center space-x-2">
-                                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                                <h3 className="text-sm font-black text-white uppercase tracking-wider">Today's Daily Target Checklist</h3>
+                                <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                                <h3 className="text-base font-black text-white uppercase tracking-wider">Today's Daily Target Checklist</h3>
                             </div>
                             <span className="text-xs font-black text-emerald-400">{dailyDoneCount} of {dailyTasks.length} Done ({dailyPct}%)</span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {dailyTasks.map(task => (
                                 <div 
                                     key={task.id}
                                     onClick={() => toggleTask(task.id)}
                                     className={cn(
-                                        "p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between",
+                                        "p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between",
                                         task.done 
                                             ? "bg-emerald-500/10 border-emerald-500/30 text-white" 
                                             : "bg-slate-900/50 border-white/[0.04] text-slate-400 hover:border-white/20 hover:text-slate-200"
                                     )}
                                 >
                                     <div className="flex items-center space-x-2.5">
-                                        <div className={cn("w-4 h-4 rounded-lg border flex items-center justify-center transition-colors shrink-0", task.done ? "bg-emerald-500 border-emerald-500 text-slate-950" : "border-slate-700")}>
-                                            {task.done && <Check className="w-3 h-3 stroke-[3]" />}
+                                        <div className={cn("w-5 h-5 rounded-lg border flex items-center justify-center transition-colors shrink-0", task.done ? "bg-emerald-500 border-emerald-500 text-slate-950" : "border-slate-700")}>
+                                            {task.done && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                                         </div>
-                                        <span className={cn("text-[11px] font-bold line-clamp-1", task.done && "line-through opacity-70")}>{task.label}</span>
+                                        <span className={cn("text-xs font-bold line-clamp-1", task.done && "line-through opacity-70")}>{task.label}</span>
                                     </div>
 
-                                    <span className="text-[8px] font-black uppercase text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 shrink-0">
+                                    <span className="text-[9px] font-black uppercase text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 shrink-0">
                                         +{task.xp} XP
                                     </span>
                                 </div>
@@ -379,25 +379,25 @@ export default function GoalsPage() {
                     </div>
 
                     {/* RIGHT (5/12): ROADMAP & BIOHACKER RANK */}
-                    <div className="lg:col-span-5 p-6 sm:p-8 rounded-3xl bg-slate-950/80 border border-white/[0.08] space-y-4 shadow-xl">
+                    <div className="xl:col-span-5 p-6 sm:p-8 rounded-3xl bg-slate-950/80 border border-white/[0.08] space-y-4 shadow-xl">
                         <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
                             <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block">Milestone Journey</span>
-                            <h3 className="text-sm font-black text-white uppercase tracking-wider">Roadmap Stages</h3>
+                            <h3 className="text-base font-black text-white uppercase tracking-wider">Roadmap Stages</h3>
                         </div>
 
-                        <div className="space-y-2 text-xs">
+                        <div className="space-y-3 text-xs">
                             {[
                                 { stage: 'Week 1: Adaptation', status: 'Completed', detail: 'Supplement timing calibrated.', color: 'text-emerald-400' },
                                 { stage: 'Week 2: Bio-Synergy', status: 'Active Protocol', detail: 'Biomarker levels stabilizing.', color: 'text-cyan-400' },
                                 { stage: 'Week 3: Peak BioScore', status: 'Upcoming', detail: 'NREM sleep & HRV optimization.', color: 'text-slate-500' },
                                 { stage: 'Month 2: Longevity Mastery', status: 'Locked', detail: 'Full routine automation.', color: 'text-slate-500' }
                             ].map((s, idx) => (
-                                <div key={idx} className="p-2.5 rounded-2xl bg-slate-900/60 border border-white/[0.04] flex items-center justify-between">
+                                <div key={idx} className="p-3 rounded-2xl bg-slate-900/60 border border-white/[0.04] flex items-center justify-between">
                                     <div>
-                                        <span className="text-[11px] font-black text-white block">{s.stage}</span>
-                                        <span className="text-[9px] text-slate-400 block">{s.detail}</span>
+                                        <span className="text-xs font-black text-white block">{s.stage}</span>
+                                        <span className="text-[10px] text-slate-400 block">{s.detail}</span>
                                     </div>
-                                    <span className={cn("text-[8px] font-black uppercase tracking-wider", s.color)}>{s.status}</span>
+                                    <span className={cn("text-[9px] font-black uppercase tracking-wider", s.color)}>{s.status}</span>
                                 </div>
                             ))}
                         </div>
@@ -405,8 +405,8 @@ export default function GoalsPage() {
 
                 </div>
 
-                {/* 1-CLICK READY-MADE GOAL TEMPLATES (4-COLUMN DESKTOP GRID) */}
-                <div className="space-y-4">
+                {/* 1-CLICK READY-MADE GOAL TEMPLATES (4-COLUMN WIDESCREEN DESKTOP) */}
+                <div className="space-y-4 w-full">
                     <div className="flex items-center justify-between">
                         <div>
                             <span className="text-[8px] font-black uppercase tracking-widest text-amber-400 block">Quick Start Protocols</span>
@@ -415,7 +415,7 @@ export default function GoalsPage() {
                         <span className="text-[9px] font-bold text-slate-400">Click to activate instantly</span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4 w-full">
                         {GOAL_TEMPLATES.map((tmpl, idx) => (
                             <div 
                                 key={idx}
@@ -441,8 +441,8 @@ export default function GoalsPage() {
                     </div>
                 </div>
 
-                {/* ACTIVE GOALS CARDS (4-COLUMN DESKTOP GRID) */}
-                <div className="space-y-4">
+                {/* ACTIVE GOALS CARDS (4-COLUMN WIDESCREEN DESKTOP) */}
+                <div className="space-y-4 w-full">
                     <div className="flex items-center justify-between">
                         <div>
                             <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block">Active Health Goals</span>
@@ -462,7 +462,7 @@ export default function GoalsPage() {
                     {isLoading ? (
                         <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-slate-500" /></div>
                     ) : filteredGoals.length === 0 ? (
-                        <div className="p-8 rounded-3xl bg-slate-950/80 border border-white/[0.08] text-center space-y-4">
+                        <div className="p-8 rounded-3xl bg-slate-950/80 border border-white/[0.08] text-center space-y-4 w-full">
                             <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mx-auto">
                                 <Target className="w-6 h-6" />
                             </div>
@@ -475,7 +475,7 @@ export default function GoalsPage() {
                             </Button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-4 w-full">
                             {filteredGoals.map((goal, i) => {
                                 const cat = getCatMeta(goal.category)
                                 const pct = Math.round((goal.current_value / goal.target_value) * 100)
@@ -544,8 +544,8 @@ export default function GoalsPage() {
                     )}
                 </div>
 
-                {/* ACHIEVEMENTS & BADGES SYSTEM (6-COLUMN DESKTOP) */}
-                <div className="space-y-4">
+                {/* ACHIEVEMENTS & BADGES SYSTEM (6-COLUMN WIDESCREEN DESKTOP) */}
+                <div className="space-y-4 w-full">
                     <div className="flex items-center justify-between">
                         <div>
                             <span className="text-[8px] font-black uppercase tracking-widest text-indigo-400 block">Gamified Progression</span>
@@ -554,7 +554,7 @@ export default function GoalsPage() {
                         <span className="text-[9px] font-bold text-slate-400">4 of 6 Unlocked</span>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 w-full">
                         {BADGES.map((badge, idx) => {
                             const BadgeIcon = badge.icon
                             return (
@@ -587,8 +587,8 @@ export default function GoalsPage() {
                     </div>
                 </div>
 
-                {/* COMMUNITY CHALLENGES (4-COLUMN DESKTOP) */}
-                <div className="p-6 sm:p-8 rounded-3xl bg-slate-950/80 border border-white/[0.08] space-y-6 shadow-2xl">
+                {/* COMMUNITY CHALLENGES (4-COLUMN WIDESCREEN DESKTOP) */}
+                <div className="p-6 sm:p-8 rounded-3xl bg-slate-950/80 border border-white/[0.08] space-y-6 shadow-2xl w-full">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/[0.06] pb-4">
                         <div>
                             <span className="text-[8px] font-black uppercase tracking-widest text-cyan-400 block">Community Arena</span>
@@ -597,7 +597,7 @@ export default function GoalsPage() {
                         <span className="text-[9px] font-bold text-slate-400">Join Thousands of Biohackers</span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
                         {COMMUNITY_CHALLENGES.map((ch, idx) => (
                             <div key={idx} className="p-4 rounded-2xl bg-slate-900/60 border border-white/[0.04] space-y-3 flex flex-col justify-between">
                                 <div className="space-y-1">

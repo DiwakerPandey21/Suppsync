@@ -191,30 +191,30 @@ export default function AnalyticsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 pb-32 px-4 sm:px-8 lg:px-12 select-none">
-            {/* WIDESCREEN CONTAINER (1600px Max Desktop Canvas) */}
-            <div className="max-w-[1600px] w-full mx-auto space-y-8 pt-6">
+        <div className="min-h-screen bg-slate-950 text-slate-100 pb-32 px-4 sm:px-8 md:px-12 lg:px-16 w-full max-w-none select-none">
+            {/* 100% EDGE-TO-EDGE FULL-WIDTH CANVAS */}
+            <div className="w-full space-y-8 pt-6">
 
                 {/* HEADER & EXPORT ACTIONS */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-4 w-full">
                     <div className="flex items-center space-x-3">
-                        <Link href="/dashboard" className="p-2 rounded-xl bg-slate-900 border border-white/10 text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
+                        <Link href="/dashboard" className="p-2.5 rounded-xl bg-slate-900 border border-white/10 text-slate-400 hover:text-white hover:bg-slate-800 transition-all">
                             <ArrowLeft className="w-4 h-4" />
                         </Link>
                         <div>
                             <div className="flex items-center space-x-2">
-                                <Activity className="w-5 h-5 text-cyan-400" />
-                                <h1 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight">Analytics OS 3.1</h1>
+                                <Activity className="w-6 h-6 text-cyan-400" />
+                                <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">Analytics OS 3.1</h1>
                             </div>
-                            <span className="text-[10px] text-slate-500 uppercase tracking-widest block font-medium">Enterprise Health Intelligence & Biomarker Analytics</span>
+                            <span className="text-xs text-slate-500 uppercase tracking-widest block font-medium">Enterprise Health Intelligence & Biomarker Analytics Matrix</span>
                         </div>
                     </div>
 
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-3">
                         <button 
                             onClick={() => setCompareMode(!compareMode)}
                             className={cn(
-                                "px-3.5 py-2 rounded-xl border text-xs font-bold transition-all flex items-center space-x-1.5 cursor-pointer",
+                                "px-4 py-2.5 rounded-xl border text-xs font-bold transition-all flex items-center space-x-2 cursor-pointer",
                                 compareMode ? "bg-cyan-500/20 border-cyan-500/40 text-cyan-300" : "bg-slate-900 border-white/10 text-slate-400 hover:text-white"
                             )}
                         >
@@ -223,39 +223,39 @@ export default function AnalyticsPage() {
                         </button>
 
                         <button 
-                            onClick={() => alert("Generating Widescreen PDF Health Report...")}
-                            className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs transition-all flex items-center space-x-1.5 shadow-lg shadow-cyan-500/20 cursor-pointer"
+                            onClick={() => alert("Generating Fullscreen PDF Health Report...")}
+                            className="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs transition-all flex items-center space-x-2 shadow-lg shadow-cyan-500/20 cursor-pointer"
                         >
                             <Download className="w-4 h-4" />
-                            <span>Export Report</span>
+                            <span>Export Full Report</span>
                         </button>
                     </div>
                 </div>
 
                 {/* HERO BANNER & 5-KPI METRIC STRIP */}
-                <div className="space-y-4">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-gradient-to-r from-slate-950 via-[#060c21] to-slate-950 p-6 sm:p-8 rounded-3xl border border-white/[0.08] relative overflow-hidden shadow-2xl">
-                        <div className="space-y-2 max-w-3xl">
+                <div className="space-y-4 w-full">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-gradient-to-r from-slate-950 via-[#060c21] to-slate-950 p-6 sm:p-8 rounded-3xl border border-white/[0.08] relative overflow-hidden shadow-2xl w-full">
+                        <div className="space-y-2 max-w-4xl">
                             <div className="inline-flex items-center space-x-2 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1 rounded-full text-cyan-400 text-[9px] font-black uppercase tracking-widest">
                                 <Sparkles className="w-3.5 h-3.5" />
-                                <span>Health Intelligence Center</span>
+                                <span>Enterprise Health Intelligence Center</span>
                             </div>
-                            <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight uppercase">
+                            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight uppercase">
                                 Biological Analytics & Longevity Matrix
                             </h2>
                             <p className="text-xs sm:text-sm text-slate-400 font-medium leading-relaxed">
-                                Complete correlation analysis of supplement intake, circadian rhythm timing, subjective scores, and wearable biomarker metrics.
+                                Complete correlation analysis of supplement intake, circadian rhythm timing, subjective scores, and wearable biomarker metrics across all body systems.
                             </p>
                         </div>
 
                         {/* TIMELINE RANGE SELECTOR STRIP */}
-                        <div className="flex items-center space-x-1.5 bg-slate-900/80 p-1.5 rounded-2xl border border-white/[0.08] shrink-0 flex-wrap">
+                        <div className="flex items-center space-x-2 bg-slate-900/80 p-2 rounded-2xl border border-white/[0.08] shrink-0 flex-wrap">
                             {TIMELINE_OPTIONS.map(opt => (
                                 <button
                                     key={opt.days}
                                     onClick={() => setSelectedDays(opt.days)}
                                     className={cn(
-                                        "px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer",
+                                        "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer",
                                         selectedDays === opt.days 
                                             ? "bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20" 
                                             : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
@@ -267,8 +267,8 @@ export default function AnalyticsPage() {
                         </div>
                     </div>
 
-                    {/* 5 WIDESCREEN KPI TILES */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                    {/* 5 FULL WIDESCREEN KPI TILES */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 w-full">
                         {[
                             { label: 'BioScore Metric', val: '88 / 100', sub: '▲ +5.4% Shift', color: 'text-cyan-400' },
                             { label: 'Overall Trend', val: 'Optimal', sub: 'Clinical Target Met', color: 'text-emerald-400' },
@@ -276,53 +276,53 @@ export default function AnalyticsPage() {
                             { label: 'Recovery Status', val: 'Optimal (92%)', sub: 'Parasympathetic High', color: 'text-purple-400' },
                             { label: 'AI Health Rating', val: 'A+ Clinical', sub: 'Top 2% Biohacker Tier', color: 'text-indigo-400' }
                         ].map((kpi, idx) => (
-                            <div key={idx} className="p-4 rounded-2xl bg-slate-950/80 border border-white/[0.06] space-y-1 hover:border-white/20 transition-all">
-                                <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block">{kpi.label}</span>
-                                <span className={cn("text-lg sm:text-xl font-black block tracking-tight", kpi.color)}>{kpi.val}</span>
-                                <span className="text-[9px] font-bold text-slate-400 block">{kpi.sub}</span>
+                            <div key={idx} className="p-5 rounded-2xl bg-slate-950/80 border border-white/[0.06] space-y-1 hover:border-white/20 transition-all">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 block">{kpi.label}</span>
+                                <span className={cn("text-xl sm:text-2xl font-black block tracking-tight", kpi.color)}>{kpi.val}</span>
+                                <span className="text-[10px] font-bold text-slate-400 block">{kpi.sub}</span>
                             </div>
                         ))}
                     </div>
                 </div>
 
                 {/* 2-COLUMN TOP ROW: AI CLINICAL REPORT + ANATOMICAL FILTER */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start w-full">
                     
                     {/* LEFT (8/12): AI CLINICAL REPORT */}
-                    <div className="lg:col-span-8 p-6 sm:p-8 rounded-3xl bg-slate-950/90 border border-cyan-500/20 backdrop-blur-xl space-y-4 shadow-xl">
+                    <div className="xl:col-span-8 p-6 sm:p-8 rounded-3xl bg-slate-950/90 border border-cyan-500/20 backdrop-blur-xl space-y-4 shadow-xl">
                         <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
                             <div className="flex items-center space-x-3">
-                                <div className="w-9 h-9 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+                                <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
                                     <Sparkles className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <span className="text-xs font-black uppercase tracking-widest text-white block">AI Clinical Synthesis Report</span>
-                                    <span className="text-[9px] text-slate-500 uppercase tracking-widest block">Automated Weekly Biomarker Intelligence</span>
+                                    <span className="text-sm font-black uppercase tracking-widest text-white block">AI Clinical Synthesis Report</span>
+                                    <span className="text-[10px] text-slate-500 uppercase tracking-widest block">Automated Weekly Biomarker Intelligence</span>
                                 </div>
                             </div>
-                            <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                                Verified
+                            <span className="text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                                Verified Analysis
                             </span>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                             <div className="p-4 rounded-2xl bg-slate-900/60 border border-white/[0.04] space-y-2">
                                 <span className="text-[9px] font-black text-cyan-400 uppercase tracking-widest block">Recovery Observation</span>
-                                <p className="text-slate-300 font-medium leading-relaxed text-[11px]">
+                                <p className="text-slate-300 font-medium leading-relaxed text-xs">
                                     Recovery score improved by <strong className="text-white">+12%</strong> this cycle. Deep NREM sleep duration increased by 42 minutes post-dosing Magnesium Threonate.
                                 </p>
                             </div>
 
                             <div className="p-4 rounded-2xl bg-slate-900/60 border border-white/[0.04] space-y-2">
                                 <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest block">Circadian Modulation</span>
-                                <p className="text-slate-300 font-medium leading-relaxed text-[11px]">
+                                <p className="text-slate-300 font-medium leading-relaxed text-xs">
                                     Mid-afternoon energy dipped slightly post-Wednesday due to late caffeine intake. Shifting caffeine cut-off to 14:00 restored afternoon clarity.
                                 </p>
                             </div>
 
                             <div className="p-4 rounded-2xl bg-slate-900/60 border border-white/[0.04] space-y-2">
                                 <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest block">AI Clinical Protocol</span>
-                                <p className="text-slate-300 font-medium leading-relaxed text-[11px]">
+                                <p className="text-slate-300 font-medium leading-relaxed text-xs">
                                     Maintain 5,000 IU Vitamin D3 + K2 with healthy breakfast fats. Hydration average reached 3.2L daily, supporting optimal renal filtration.
                                 </p>
                             </div>
@@ -330,7 +330,7 @@ export default function AnalyticsPage() {
                     </div>
 
                     {/* RIGHT (4/12): ANATOMICAL SYSTEM SELECTOR */}
-                    <div className="lg:col-span-4 p-6 rounded-3xl bg-slate-950/80 border border-white/[0.08] space-y-4 shadow-xl">
+                    <div className="xl:col-span-4 p-6 sm:p-8 rounded-3xl bg-slate-950/80 border border-white/[0.08] space-y-4 shadow-xl">
                         <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
                             <div>
                                 <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block">Biological Focus</span>
@@ -339,7 +339,7 @@ export default function AnalyticsPage() {
                             <span className="text-[9px] font-bold text-cyan-400">Click to filter</span>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-2 gap-2.5">
                             {BODY_REGIONS.map(region => {
                                 const RegionIcon = region.icon
                                 const isSelected = selectedRegion === region.id
@@ -354,10 +354,10 @@ export default function AnalyticsPage() {
                                                 : "bg-slate-900/50 border-white/[0.04] text-slate-400 hover:border-white/20 hover:text-slate-200"
                                         )}
                                     >
-                                        <div className={cn("w-6 h-6 rounded-xl flex items-center justify-center transition-colors mb-1", isSelected ? "bg-cyan-500 text-slate-950" : "bg-white/[0.04] text-slate-400 group-hover:text-cyan-400")}>
-                                            <RegionIcon className="w-3.5 h-3.5" />
+                                        <div className={cn("w-7 h-7 rounded-xl flex items-center justify-center transition-colors mb-1", isSelected ? "bg-cyan-500 text-slate-950" : "bg-white/[0.04] text-slate-400 group-hover:text-cyan-400")}>
+                                            <RegionIcon className="w-4 h-4" />
                                         </div>
-                                        <span className="text-[10px] font-black block uppercase tracking-wider line-clamp-1">{region.label}</span>
+                                        <span className="text-xs font-black block uppercase tracking-wider line-clamp-1">{region.label}</span>
                                     </button>
                                 )
                             })}
@@ -367,19 +367,19 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* 2-COLUMN WIDESCREEN CHARTS ROW */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full">
 
                     {/* ADHERENCE CURVE */}
                     <div className="p-6 sm:p-8 rounded-3xl bg-slate-950/80 border border-white/[0.08] space-y-4 shadow-xl">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
-                                <TrendingUp className="w-4 h-4 text-emerald-400" />
-                                <h3 className="text-sm font-black text-white uppercase tracking-wider">Stack Adherence Curve</h3>
+                                <TrendingUp className="w-5 h-5 text-emerald-400" />
+                                <h3 className="text-base font-black text-white uppercase tracking-wider">Stack Adherence Curve</h3>
                             </div>
                             <span className="text-xs font-black text-emerald-400">Mean {avg('adherence')}%</span>
                         </div>
 
-                        <div className="h-64 w-full pt-2">
+                        <div className="h-72 w-full pt-2 min-h-[280px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={data}>
                                     <defs>
@@ -402,26 +402,26 @@ export default function AnalyticsPage() {
                     <div className="p-6 sm:p-8 rounded-3xl bg-slate-950/80 border border-white/[0.08] space-y-4 shadow-xl">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-2">
-                                <Activity className="w-4 h-4 text-cyan-400" />
-                                <h3 className="text-sm font-black text-white uppercase tracking-wider">Subjective Score Curves</h3>
+                                <Activity className="w-5 h-5 text-cyan-400" />
+                                <h3 className="text-base font-black text-white uppercase tracking-wider">Subjective Score Curves</h3>
                             </div>
-                            <div className="flex items-center space-x-3 text-[9px] font-bold">
+                            <div className="flex items-center space-x-4 text-xs font-bold">
                                 <span className="text-amber-400">● Energy ({avg('energy')})</span>
                                 <span className="text-blue-400">● Focus ({avg('focus')})</span>
                                 <span className="text-purple-400">● Sleep ({avg('sleep')})</span>
                             </div>
                         </div>
 
-                        <div className="h-64 w-full pt-2">
+                        <div className="h-72 w-full pt-2 min-h-[280px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={data}>
                                     <CartesianGrid stroke="#1e293b" strokeDasharray="3 3" vertical={false} />
                                     <XAxis dataKey="date" tick={{ fontSize: 9, fill: '#64748b' }} tickFormatter={d => d.slice(5)} />
                                     <YAxis domain={[0, 10]} tick={{ fontSize: 9, fill: '#64748b' }} axisLine={false} />
                                     <Tooltip content={customTooltip} />
-                                    <Line type="monotone" dataKey="energy" stroke="#f59e0b" strokeWidth={2} dot={false} name="Energy" />
-                                    <Line type="monotone" dataKey="focus" stroke="#3b82f6" strokeWidth={2} dot={false} name="Focus" />
-                                    <Line type="monotone" dataKey="sleep" stroke="#a855f7" strokeWidth={2} dot={false} name="Sleep" />
+                                    <Line type="monotone" dataKey="energy" stroke="#f59e0b" strokeWidth={2.5} dot={false} name="Energy" />
+                                    <Line type="monotone" dataKey="focus" stroke="#3b82f6" strokeWidth={2.5} dot={false} name="Focus" />
+                                    <Line type="monotone" dataKey="sleep" stroke="#a855f7" strokeWidth={2.5} dot={false} name="Sleep" />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>
@@ -430,10 +430,10 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* CORRELATION ENGINE & PREDICTIONS ROW */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-center w-full">
                     
                     {/* LEFT (8/12): CORRELATION FLOW */}
-                    <div className="lg:col-span-8 p-6 sm:p-8 rounded-3xl bg-slate-950/80 border border-white/[0.08] space-y-6 shadow-2xl">
+                    <div className="xl:col-span-8 p-6 sm:p-8 rounded-3xl bg-slate-950/80 border border-white/[0.08] space-y-6 shadow-2xl">
                         <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
                             <div>
                                 <span className="text-[8px] font-black uppercase tracking-widest text-cyan-400 block">System Dynamics</span>
@@ -442,24 +442,24 @@ export default function AnalyticsPage() {
                             <span className="text-[9px] font-bold text-slate-400">Automated Causal Link Mapping</span>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                             {[
                                 { title: '1. Supplement Intake', val: 'Magnesium + D3', sub: '98% Adherence', color: 'border-blue-500/30 text-blue-400' },
                                 { title: '2. Deep NREM Sleep', val: '8.2 Hours Avg', sub: '▲ +14% Quality', color: 'border-purple-500/30 text-purple-400' },
                                 { title: '3. Parasympathetic HRV', val: '68 ms HRV', sub: '▲ +6 ms Shift', color: 'border-cyan-500/30 text-cyan-400' },
                                 { title: '4. Vitality & Energy', val: '8.8 / 10 Score', sub: '▲ +18% Subjective', color: 'border-emerald-500/30 text-emerald-400' }
                             ].map((step, idx) => (
-                                <div key={idx} className={cn("p-4 rounded-2xl bg-slate-900/60 border space-y-1.5", step.color)}>
+                                <div key={idx} className={cn("p-4 rounded-2xl bg-slate-900/60 border space-y-2", step.color)}>
                                     <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 block">{step.title}</span>
-                                    <span className="text-xs sm:text-sm font-black text-white block">{step.val}</span>
-                                    <span className="text-[9px] font-bold block">{step.sub}</span>
+                                    <span className="text-sm font-black text-white block">{step.val}</span>
+                                    <span className="text-[10px] font-bold block">{step.sub}</span>
                                 </div>
                             ))}
                         </div>
                     </div>
 
                     {/* RIGHT (4/12): AI PREDICTION */}
-                    <div className="lg:col-span-4 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-cyan-950/40 via-slate-950 to-indigo-950/40 border border-cyan-500/30 space-y-4 shadow-xl">
+                    <div className="xl:col-span-4 p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-cyan-950/40 via-slate-950 to-indigo-950/40 border border-cyan-500/30 space-y-4 shadow-xl">
                         <div className="flex items-center space-x-2 text-cyan-400 text-[8px] font-black uppercase tracking-widest">
                             <Cpu className="w-4 h-4" />
                             <span>AI Predictive Health Modeling</span>
@@ -478,8 +478,8 @@ export default function AnalyticsPage() {
 
                 </div>
 
-                {/* 12 PERFORMANCE MODULES GRID (4-COLUMN DESKTOP) */}
-                <div className="space-y-4">
+                {/* 12 PERFORMANCE MODULES GRID (6-COLUMN WIDESCREEN DESKTOP) */}
+                <div className="space-y-4 w-full">
                     <div className="flex items-center justify-between">
                         <div>
                             <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block">Health Intelligence Modules</span>
@@ -488,7 +488,7 @@ export default function AnalyticsPage() {
                         <span className="text-[9px] font-bold text-slate-400">{filteredModules.length} Modules Active</span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4 w-full">
                         {filteredModules.map((mod, i) => {
                             const ModIcon = mod.icon
                             return (
@@ -529,7 +529,7 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* FULL-WIDTH SUPPLEMENT EFFECTIVENESS MATRIX */}
-                <div className="p-6 sm:p-8 rounded-3xl bg-slate-950/80 border border-white/[0.08] space-y-6 shadow-2xl">
+                <div className="p-6 sm:p-8 rounded-3xl bg-slate-950/80 border border-white/[0.08] space-y-6 shadow-2xl w-full">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/[0.06] pb-4">
                         <div>
                             <span className="text-[8px] font-black uppercase tracking-widest text-amber-400 block">Efficacy Leaderboard</span>
@@ -538,15 +538,15 @@ export default function AnalyticsPage() {
                         <span className="text-[9px] font-bold text-slate-400">Calculated from 30-Day Biomarker Shifts</span>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-3">
+                    <div className="grid grid-cols-1 gap-3 w-full">
                         {SUPPLEMENT_EFFECTIVENESS.map((supp, i) => (
-                            <div key={i} className="p-4 rounded-2xl bg-slate-900/60 border border-white/[0.05] flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-white/10 transition-all">
-                                <div className="space-y-1 max-w-xl">
+                            <div key={i} className="p-5 rounded-2xl bg-slate-900/60 border border-white/[0.05] flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-white/10 transition-all w-full">
+                                <div className="space-y-1 max-w-2xl">
                                     <div className="flex items-center space-x-2">
-                                        <span className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">{supp.name}</span>
+                                        <span className="text-sm font-black text-white uppercase tracking-wider">{supp.name}</span>
                                         <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 tracking-widest">{supp.status}</span>
                                     </div>
-                                    <p className="text-[11px] text-slate-400">{supp.summary}</p>
+                                    <p className="text-xs text-slate-400">{supp.summary}</p>
                                 </div>
 
                                 <div className="flex items-center space-x-8 text-xs shrink-0">
@@ -572,8 +572,8 @@ export default function AnalyticsPage() {
                     </div>
                 </div>
 
-                {/* BIOMARKER INTELLIGENCE CARDS (4-COLUMN DESKTOP) */}
-                <div className="space-y-4">
+                {/* BIOMARKER INTELLIGENCE CARDS (6-COLUMN WIDESCREEN DESKTOP) */}
+                <div className="space-y-4 w-full">
                     <div className="flex items-center justify-between">
                         <div>
                             <span className="text-[8px] font-black uppercase tracking-widest text-slate-500 block">Bloodwork & Wearables</span>
@@ -582,7 +582,7 @@ export default function AnalyticsPage() {
                         <span className="text-[9px] font-bold text-slate-400">6 Key Markers Tracked</span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 w-full">
                         {BIOMARKERS.map((bio, idx) => (
                             <div key={idx} className="p-4 rounded-2xl bg-slate-950/60 border border-white/[0.06] space-y-3">
                                 <div className="flex justify-between items-center">
@@ -604,7 +604,7 @@ export default function AnalyticsPage() {
                 </div>
 
                 {/* PERSONAL RECORDS 5-COLUMN ROW */}
-                <div className="p-6 rounded-3xl bg-slate-950/80 border border-white/[0.06] backdrop-blur-xl grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 text-center">
+                <div className="p-6 rounded-3xl bg-slate-950/80 border border-white/[0.06] backdrop-blur-xl grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 text-center w-full">
                     {[
                         { val: '14 Days', label: 'Longest Streak' },
                         { val: '9.4 / 10', label: 'Highest Energy' },
