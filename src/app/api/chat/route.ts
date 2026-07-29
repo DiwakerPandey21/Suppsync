@@ -13,7 +13,9 @@ export async function POST(req: Request) {
         if (context) {
             systemPrompt += `\n\n--- USER DATA CONTEXT ---\n`
             if (context.supplements?.length) systemPrompt += `\nCURRENT STACK: ${context.supplements.map((s: any) => s.name).join(', ')}`
-            if (context.recentScores?.length) systemPrompt += `\nLATEST SCORES: Energy=${context.recentScores[0].energy_score}, Focus=${context.recentScores[0].focus_score}, Sleep=${context.recentScores[0].sleep_score}`
+            if (context.recentScores?.length && context.recentScores[0]) {
+                systemPrompt += `\nLATEST SCORES: Energy=${context.recentScores[0].energy_score ?? 'N/A'}, Focus=${context.recentScores[0].focus_score ?? 'N/A'}, Sleep=${context.recentScores[0].sleep_score ?? 'N/A'}`
+            }
             systemPrompt += `\n-------------------------\n`
         }
 
@@ -21,20 +23,39 @@ export async function POST(req: Request) {
         if (!apiKey) throw new Error("Missing GEMINI_API_KEY")
 
         const genAI = new GoogleGenerativeAI(apiKey)
-        const model = genAI.getGenerativeModel({ 
-            model: "gemini-2.5-flash",
-            systemInstruction: systemPrompt 
-        })
+
+        // Candidate Gemini models in order of stability & performance
+        const candidateModels = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-pro"]
 
         // Convert messages to Gemini format
         const history = messages.slice(0, -1).map((m: any) => ({
             role: m.role === 'user' ? 'user' : 'model',
-            parts: [{ text: m.content }]
+            parts: [{ text: m.content || ' ' }]
         }))
-        const latestMsg = messages[messages.length - 1].content
+        const latestMsg = messages[messages.length - 1]?.content || 'Hello'
 
-        const chat = model.startChat({ history })
-        const result = await chat.sendMessageStream(latestMsg)
+        let result: any = null
+        let lastError: any = null
+
+        // Model fallback loop to prevent 503 Service Unavailable / High Demand failures
+        for (const modelName of candidateModels) {
+            try {
+                const model = genAI.getGenerativeModel({ 
+                    model: modelName,
+                    systemInstruction: systemPrompt 
+                })
+                const chat = model.startChat({ history })
+                result = await chat.sendMessageStream(latestMsg)
+                if (result) break
+            } catch (err: any) {
+                console.warn(`Gemini Model [${modelName}] high demand or unavailable (${err?.message}). Trying fallback model...`)
+                lastError = err
+            }
+        }
+
+        if (!result) {
+            throw lastError || new Error("All Gemini AI model endpoints are currently experiencing high demand. Please try again in a moment.")
+        }
 
         // Create a custom ReadableStream to send pure raw text chunks
         const stream = new ReadableStream({
@@ -46,8 +67,7 @@ export async function POST(req: Request) {
                     }
                     controller.close()
                 } catch (e: any) {
-                    // Send error text to frontend so user actually sees it instead of a blank UI!
-                    controller.enqueue(new TextEncoder().encode("\n[Error thinking: " + e.message + "]"))
+                    controller.enqueue(new TextEncoder().encode("\n[Response stream notice: " + e.message + "]"))
                     controller.close()
                 }
             }
