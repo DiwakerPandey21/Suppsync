@@ -266,29 +266,38 @@ export default function ChatPage() {
         setCurrentlySpeakingId(null)
     }
 
-    // Load user context safely using select('*') to prevent missing column 400 errors
+    // Load user context safely using select('*') to prevent missing column/table errors
     const loadUserContext = async () => {
         try {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) return
 
+            const safeQuery = async (promise: PromiseLike<any>) => {
+                try {
+                    const res = await promise
+                    return res?.error ? { data: [] } : res
+                } catch {
+                    return { data: [] }
+                }
+            }
+
             const [supps, scores, bio, goals, genos, profileRes] = await Promise.all([
-                supabase.from('supplements').select('*').eq('user_id', user.id),
-                supabase.from('subjective_scores').select('*').eq('user_id', user.id).limit(7),
-                supabase.from('biomarkers').select('*').eq('user_id', user.id).limit(5),
-                supabase.from('goals').select('*').eq('user_id', user.id),
-                supabase.from('genotypes').select('*').eq('user_id', user.id),
-                supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
+                safeQuery(supabase.from('supplements').select('*').eq('user_id', user.id)),
+                safeQuery(supabase.from('subjective_scores').select('*').eq('user_id', user.id).limit(7)),
+                safeQuery(supabase.from('biomarkers').select('*').eq('user_id', user.id).limit(5)),
+                safeQuery(supabase.from('goals').select('*').eq('user_id', user.id)),
+                safeQuery(supabase.from('genotypes').select('*').eq('user_id', user.id)),
+                safeQuery(supabase.from('profiles').select('*').eq('id', user.id).maybeSingle())
             ])
 
-            const profile = profileRes.data
+            const profile = profileRes?.data
 
             setUserContext({
-                stack: supps.data?.map((s: any) => `${s.name || s.title} (${s.default_dosage_amount || s.dosage || ''}${s.default_dosage_unit || s.unit || ''})`) || [],
-                scores: scores.data || [],
-                biomarkers: bio.data || [],
-                goals: goals.data || [],
-                genotypes: genos.data || [],
+                stack: supps?.data?.map((s: any) => `${s.name || s.title} (${s.default_dosage_amount || s.dosage || ''}${s.default_dosage_unit || s.unit || ''})`) || [],
+                scores: scores?.data || [],
+                biomarkers: bio?.data || [],
+                goals: goals?.data || [],
+                genotypes: genos?.data || [],
                 profileName: profile?.display_name || profile?.username || 'Biohacker'
             })
         } catch (err) {

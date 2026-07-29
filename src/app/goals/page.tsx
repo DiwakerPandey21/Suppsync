@@ -42,12 +42,14 @@ export default function GoalsPage() {
         setIsLoading(true)
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
-        const { data } = await supabase
+        const { data, error } = await supabase
             .from('goals')
             .select('*')
             .eq('user_id', user.id)
             .order('created_at', { ascending: false })
-        setGoals(data || [])
+        if (!error && data) {
+            setGoals(data)
+        }
         setIsLoading(false)
     }
 
