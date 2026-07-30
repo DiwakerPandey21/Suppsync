@@ -54,7 +54,7 @@ export function Footer() {
             {/* Immersive top aurora boundary */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[1px] bg-gradient-to-r from-transparent via-indigo-500/25 to-transparent pointer-events-none" />
             
-            <div className="max-w-5xl mx-auto px-6 md:px-8 space-y-12 relative z-10 text-slate-300">
+            <div className="max-w-[1600px] w-full mx-auto px-6 md:px-8 space-y-12 relative z-10 text-slate-300">
                 
                 {/* CHAPTER 1: Closing Tagline Hero */}
                 <div className="space-y-4 pt-4">

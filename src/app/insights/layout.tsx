@@ -4,7 +4,7 @@ export default function InsightsLayout({
     children: React.ReactNode
 }) {
     return (
-        <main className="max-w-md mx-auto w-full">
+        <main className="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             {children}
         </main>
     )
